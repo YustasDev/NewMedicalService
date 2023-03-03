@@ -536,17 +536,20 @@ public class ClientService {
         List<Doctor> doctorList = doctorRepository.findAll();
         if (doctorList != null) {
             for (Doctor doctor : doctorList) {
-                DoctorDTO doctorDTO = new DoctorDTO();
-                doctorDTO.setId(doctor.getId());
-                doctorDTO.setDoctorFirstName(doctor.getDoctorFirstName());
-                doctorDTO.setDoctorLastName(doctor.getDoctorLastName());
-                doctorDTO.setDoctorSureName(doctor.getDoctorSureName());
-                doctorDTO.setDoctorTelefon(doctor.getDoctorTelefon());
-                doctorDTO.setDoctorEmail(doctor.getDoctorEmail());
-                doctorDTO.setDoctorAddres(doctor.getDoctorAddres());
-                doctorDTO.setDoctorType(String.valueOf(doctor.getDoctorType()));
-                doctorDTO.setDescription(doctor.getDescription());
+                DoctorDTO doctorDTO = mapDoctor_toDoctorDTO(doctor);
                 doctorDTOList.add(doctorDTO);
+
+//                DoctorDTO doctorDTO = new DoctorDTO();
+//                doctorDTO.setId(doctor.getId());
+//                doctorDTO.setDoctorFirstName(doctor.getDoctorFirstName());
+//                doctorDTO.setDoctorLastName(doctor.getDoctorLastName());
+//                doctorDTO.setDoctorSureName(doctor.getDoctorSureName());
+//                doctorDTO.setDoctorTelefon(doctor.getDoctorTelefon());
+//                doctorDTO.setDoctorEmail(doctor.getDoctorEmail());
+//                doctorDTO.setDoctorAddres(doctor.getDoctorAddres());
+//                doctorDTO.setDoctorType(String.valueOf(doctor.getDoctorType()));
+//                doctorDTO.setDescription(doctor.getDescription());
+//                doctorDTOList.add(doctorDTO);
             }
         }
         return doctorDTOList;
