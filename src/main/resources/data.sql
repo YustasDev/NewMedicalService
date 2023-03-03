@@ -1,0 +1,2 @@
+insert ignore into users(login, password, user_name, user_role) values('user1', 'user1', 'Nata Katcman', 'secretary');
+insert ignore into users(login, password, user_name, user_role) values('admin1', 'admin1', 'Izya Gotcman', 'admin');

@@ -1,0 +1,60 @@
+# example values
+
+server:
+port: 8080
+
+jasypt:
+  encryptor:
+    algorithm: PBEWithMD5AndDES
+    password: ${ENCRYPTION_PASSWORD:secretKey}
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+
+
+spring:
+  mail:
+    host: mail.smtp2go.com
+    port: 2525
+    username: progforce.com
+    #password: Fmx0d0TB90IKfMQM
+    password: ENC(M7W1SF5PZD0SD0w3B2aq/C2I5r3mKHsJJqHwMqPlBfk=)
+  datasource:
+    username: root
+    password: ENC(w7qYbKTj2l8T6ozrMwNQYpvJbVSQjUzG)
+    #password: password
+    #url: jdbc:mysql://localhost:3306/medical_service?serverTimezone=Europe/Moscow
+    url: jdbc:mysql://localhost:3306/medical_service?useSSL=false&serverTimezone=Europe/Moscow
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+
+  main:
+    allow-circular-references: true
+
+password:
+  admin: ENC(KUCduDnnmvIqdubpvFZakg==)
+  user1: ENC(jz7kJLDKuNMQke2hDmjCEw==)
+  user2: ENC(r8EDqFIvFAb0XQU73YnAtw==)
+
+
+templates:
+  contract: /home/progforce/Temp/templateContract.pdf
+  agreement: /home/progforce/Temp/templateAgreement.pdf
+  questionnaire: /home/progforce/Temp/templateQuestionnaire.pdf
+
+mail:
+  enabled: true
+  from: vitaly.gusev@progforce.com
+  preLink: http://localhost:8080/displayDocumentsTemplates/
+  subject: כשלון בריצת ממשק מניפה ארכיב
+
+
+
