@@ -27,10 +27,10 @@ public class Family implements Serializable {
     @Column(name = "familyName")
     private String familyName;
 
-    @Column(name = "familyHead", unique=true)
+    @Column(name = "familyHead")
     private String FamilyHead;
 
-    @Column(name = "familyMobile")
+    @Column(name = "familyMobile", unique = true)
     private String familyMobile;
 
     @Column(name = "description")

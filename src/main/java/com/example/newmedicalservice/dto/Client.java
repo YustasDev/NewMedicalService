@@ -7,6 +7,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -89,5 +90,8 @@ public class Client implements Serializable {
 
     @Column(name = "kxNumber")
     private String kxNumber;
+
+//    @OneToMany(mappedBy = "client")
+//    private List<Assignment> assignmentList;
 
 }

@@ -59,6 +59,9 @@ public class Doctor implements Serializable {
     @NotBlank(message="Description is required")
     private String description;
 
+//    @OneToMany(mappedBy = "doctor")
+//    private List<Assignment> assignmentList;
+
 
     public enum DoctorType{
         AAA,

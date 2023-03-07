@@ -73,25 +73,21 @@ public class ClientController {
     }
 
     @CrossOrigin
-    @PatchMapping("/setFamilyDate")
-    ResponseEntity<?> setFamilyDate(@RequestBody FamilyDTO familyDTO) {   // todo FRONT ==> clientList are always null
-        Family familyForModify = null;
-        Optional<Family> familyForModifyOpt = familyRepository.findById(familyDTO.getId());
-        if(familyForModifyOpt.isPresent()) {
-            familyForModify = familyForModifyOpt.get();
-            if (familyForModify != null) {
-                familyForModify.setFamilyName(familyDTO.getFamilyName());
-                familyForModify.setFamilyHead(familyDTO.getFamilyHead());
-                familyForModify.setFamilyMobile(familyDTO.getFamilyMobile());
-                familyForModify.setDescription(familyDTO.getDescription());
-                familyRepository.save(familyForModify);
-            }
+    @PatchMapping("/modifyFamily")
+    ResponseEntity<?> modifyFamilyData(@RequestParam(name="familyID", required=true) String familyID,
+                                       @RequestParam(name="familyName", required=false) String familyName,
+                                       @RequestParam(name="familyMobile", required=false) String familyMobile,
+                                       @RequestParam(name="familyDescription", required=false) String familyDescription,
+                                       @RequestParam(name="familyHead", required=false) String familyHead){
+
+    Family familyAfterRedact = clientService.redactFamilyData(familyID, familyName, familyMobile, familyDescription, familyHead);
+        if(familyAfterRedact != null) {
+            FamilyDTO familyDTO = clientService.mapFamily_toFamilyDTO(familyAfterRedact);
+            return ResponseEntity.status(HttpStatus.CREATED).body(familyDTO);
         }
         else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no family with this ID: " + familyDTO.getId());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such family with ID = " + familyID);
         }
-        FamilyDTO familyDTOforAnswer = clientService.mapFamily_toFamilyDTO(familyForModify);
-        return ResponseEntity.status(HttpStatus.CREATED).body(familyDTOforAnswer);
     }
 
 

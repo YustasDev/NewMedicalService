@@ -393,18 +393,27 @@ public class ClientService {
             }
             if (clientID_Doctor != null) {
                 Doctor doctor = null;
-                Optional<Doctor> doctorOptional = doctorRepository.findById(Integer.valueOf(clientID_Doctor));
-                if (doctorOptional.isPresent()) {
-                    doctor = doctorOptional.get();
-                    client.setDoctor(doctor);
-                    /* archive the doctor's assignment data */
-                    DoctorArchive doctorArchive = new DoctorArchive();
-                    doctorArchive.setIdDoctor(doctor.getId());
-                    doctorArchive.setIdClient(client.getId());
-                    doctorArchive.setSetupDate(LocalDateTime.now());
-                    doctorArchiveRepository.save(doctorArchive);
-                } else {
-                    LOGGER.error(marker, "Doctor with ID = '" + clientID_Doctor + "' does not exist in the database");
+                Integer clientID_DoctorInt = null;
+                try {
+                    clientID_DoctorInt = Integer.valueOf(clientID_Doctor);
+                }
+                catch (NumberFormatException nfe){
+                    LOGGER.warn(marker, "clientID_Doctor is not defined: " + nfe);
+                }
+                if(clientID_DoctorInt != null) {
+                    Optional<Doctor> doctorOptional = doctorRepository.findById(clientID_DoctorInt);
+                    if (doctorOptional.isPresent()) {
+                        doctor = doctorOptional.get();
+                        client.setDoctor(doctor);
+                        /* archive the doctor's assignment data */
+                        DoctorArchive doctorArchive = new DoctorArchive();
+                        doctorArchive.setIdDoctor(doctor.getId());
+                        doctorArchive.setIdClient(client.getId());
+                        doctorArchive.setSetupDate(LocalDateTime.now());
+                        doctorArchiveRepository.save(doctorArchive);
+                    } else {
+                        LOGGER.error(marker, "Doctor with ID = '" + clientID_Doctor + "' does not exist in the database");
+                    }
                 }
             }
             clientRepository.save(client);
@@ -440,6 +449,9 @@ public class ClientService {
             clientDTO.setClientDocsID(client.getClientDocs().getId());
         }
         clientDTO.setKxNumber(client.getKxNumber());
+        if(client.getDoctor() != null) {
+            clientDTO.setDoctorID(client.getDoctor().getId());
+        }
         return clientDTO;
     }
 
@@ -589,28 +601,28 @@ public class ClientService {
         if (optionalDoctor.isPresent()) {
             doctor = optionalDoctor.get();
 
-            if (doctorFirstName != null) {
+            if (!doctorFirstName.isEmpty()) {
                 doctor.setDoctorFirstName(doctorFirstName);
             }
-            if (doctorLastName != null) {
+            if (!doctorLastName.isEmpty()) {
                 doctor.setDoctorLastName(doctorLastName);
             }
-            if (doctorSureName != null) {
+            if (!doctorSureName.isEmpty()) {
                 doctor.setDoctorSureName(doctorSureName);
             }
-            if (doctorTelefon != null) {
+            if (!doctorTelefon.isEmpty()) {
                 doctor.setDoctorTelefon(doctorTelefon);
             }
-            if (doctorEmail != null) {
+            if (!doctorEmail.isEmpty()) {
                 doctor.setDoctorEmail(doctorEmail);
             }
-            if (doctorAddres != null) {
+            if (!doctorAddres.isEmpty()) {
                 doctor.setDoctorAddres(doctorAddres);
             }
-            if (description != null) {
+            if (!description.isEmpty()) {
                 doctor.setDescription(description);
             }
-            if (doctorType != null) {
+            if (!doctorType.isEmpty()) {
                 try {
                     Doctor.DoctorType typeEnumDoc = Doctor.DoctorType.valueOf(doctorType);
                     doctor.setDoctorType(typeEnumDoc);
@@ -628,6 +640,38 @@ public class ClientService {
         }
         return doctor;
     }
+
+
+    public Family redactFamilyData(String familyID, String familyName, String familyMobile,
+                                   String familyDescription, String familyHead) {
+
+        Marker marker = getLogMarker();
+        Optional<Family> optionalFamily = familyRepository.findById(Integer.valueOf(familyID));
+        Family familyForModify = null;
+        if (optionalFamily.isPresent()) {
+            familyForModify = optionalFamily.get();
+            if(!familyName.isEmpty()){
+                familyForModify.setFamilyName(familyName);
+            }
+            if(!familyMobile.isEmpty()){
+                familyForModify.setFamilyMobile(familyMobile);
+            }
+            if(!familyDescription.isEmpty()){
+                familyForModify.setDescription(familyDescription);
+            }
+            if(!familyHead.isEmpty()){
+                familyForModify.setFamilyHead(familyHead);
+            }
+            familyRepository.save(familyForModify);
+            LOGGER.info(marker, "Changes were made to the family's setting data with familyID = " + familyID);
+        }
+        else {
+            LOGGER.error(marker, "Attempt to edit a Family with ID = '" + familyID +
+                    "' failed because the Family with this ID does not exist in the database");
+        }
+        return familyForModify;
+    }
+
 
 
 
