@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 
 @Data
 @NoArgsConstructor
@@ -30,16 +31,16 @@ public class MedicalServiceUser {
     private String password;
 
     @Column(name = "userName")
-    private String UserName;
+    private String userName;
 
     @Column(name = "userEmail")
-    private String UserEmail;
+    private String userEmail;
 
     @Column(name = "userPhone")
-    private String UserTel;
+    private String userTel;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "userRole", columnDefinition = "ENUM('admin', 'secretary')")
+    @Column(name = "userRole", columnDefinition = "ENUM('admin', 'secretary')", nullable = false)
     private UserRole userRole;
 
 

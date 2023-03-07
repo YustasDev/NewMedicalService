@@ -40,9 +40,9 @@ import java.util.Optional;
 public class ClientController {
 
     private static final Logger LOGGER = LogManager.getLogger(ClientController.class);
-    private static final Marker USER1 = MarkerManager.getMarker("USER1");
-    private static final Marker USER2 = MarkerManager.getMarker("USER2");
-    private static final Marker ADMIN = MarkerManager.getMarker("ADMIN");
+   // private static final Marker USER = MarkerManager.getMarker("USER");
+  //  private static final Marker USER2 = MarkerManager.getMarker("USER2");
+  //  private static final Marker ADMIN = MarkerManager.getMarker("ADMIN");
     final static String REGEXEMAIL = "^[\\w!#$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
 
 
@@ -96,20 +96,7 @@ public class ClientController {
     ResponseEntity<?> setClient(@RequestBody ClientDTO clientDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserName_inService = authentication.getName();
-        Marker marker = null;
-        if (currentUserName_inService.equals("user1")){
-            marker = USER1;
-        }
-        else if(currentUserName_inService.equals("user2")){
-            marker = USER2;
-        }
-        else if (currentUserName_inService.equals("admin")){
-            marker = ADMIN;
-        }
-        else {
-            log.error("user logged in is not defined"); // todo can't be
-        }
-
+        Marker marker = clientService.getLogMarker();
 
         Client newClient = new Client();
         newClient.setPassportNumber(clientDTO.getPassportNumber());
@@ -165,7 +152,7 @@ public class ClientController {
             family = familyRepository.getReferenceById(clientDTO.getFamilyID());
         }
         else {
-            family = new Family();   // TODO  Check IT!
+            family = new Family();
             family.setFamilyMobile(newClient.getTelephone());
         }
         newClient.setFamily(family);

@@ -9,19 +9,19 @@
     </Console>
 
 
-    <File name="User1" fileName="logs/user1.log">
+    <File name="User" fileName="logs/user.log">
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
       <Filters>
-        <MarkerFilter marker="USER1" />
+        <MarkerFilter marker="USER" />
       </Filters>
     </File>
 
-    <File name="User2" fileName="logs/user2.log">
-      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-      <Filters>
-        <MarkerFilter marker="USER2" />
-      </Filters>
-    </File>
+<!--    <File name="User2" fileName="logs/user2.log">-->
+<!--      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>-->
+<!--      <Filters>-->
+<!--        <MarkerFilter marker="USER2" />-->
+<!--      </Filters>-->
+<!--    </File>-->
 
   <File name="Admin" fileName="logs/admin.log">
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
@@ -40,8 +40,8 @@
   <loggers>
     <root level="info">
       <appenderRef ref="Console" />
-      <appender-ref ref="User1"/>
-      <appender-ref ref="User2"/>
+      <appender-ref ref="User"/>
+<!--      <appender-ref ref="User2"/>-->
       <appender-ref ref="Admin"/>
       <appender-ref ref="ExceptionCase" level="error"/>
     </root>

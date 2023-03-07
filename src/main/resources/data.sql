@@ -1,2 +1,2 @@
-insert ignore into users(login, password, user_name, user_role) values('user1', 'user1', 'Nata Katcman', 'secretary');
-insert ignore into users(login, password, user_name, user_role) values('admin1', 'admin1', 'Izya Gotcman', 'admin');
+insert ignore into users(login, password, user_name, user_role) values('user1', '$2a$16$L00eWwRsViltlfBXLxePr.wruveUHx5PrXvPOarpzhEVLbZ19Z8Di', 'Nata Katcman', 'secretary');
+insert ignore into users(login, password, user_name, user_role) values('admin1', '$2a$10$jeM5kBPMxR9YJQE4Zcg1z.ulzHTMTjoMmEIQtYdxA8Tqn2sFXD2FS', 'Izya Gotcman', 'admin');

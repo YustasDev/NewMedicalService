@@ -51,8 +51,7 @@ import java.util.Optional;
 public class ClientService {
 
     private static final Logger LOGGER = LogManager.getLogger(ClientService.class);
-    private static final Marker USER1 = MarkerManager.getMarker("USER1");
-    private static final Marker USER2 = MarkerManager.getMarker("USER2");
+    private static final Marker USER = MarkerManager.getMarker("USER");
     private static final Marker ADMIN = MarkerManager.getMarker("ADMIN");
 
     private ClientRepository clientRepository;
@@ -217,27 +216,28 @@ public class ClientService {
         }
 
         for (Client client : selectedClients) {
-            ClientDTO clientDTO = new ClientDTO();
-            clientDTO.setId(client.getId());
-            clientDTO.setPassportNumber(client.getPassportNumber());
-            clientDTO.setFirstName(client.getFirstName());
-            clientDTO.setSurName(client.getSurName());
-            clientDTO.setLastName(client.getLastName());
-            clientDTO.setRegistrationDate(client.getRegistrationDate());
-            if (client.getFamily() != null) {
-                clientDTO.setFamilyID(client.getFamily().getId());
-            }
-            clientDTO.setTelephone(client.getTelephone());
-            clientDTO.setEmail(client.getEmail());
-            clientDTO.setStartPaymentDate(client.getStartPaymentDate());
-            clientDTO.setStartServiceDate(client.getStartServiceDate());
-            clientDTO.setServiceDescription(client.getServiceDescription());
-            clientDTO.setBlocked(client.getBlocked());
-            clientDTO.setBlockedReasonDescription(client.getBlockedReasonDescription());
-            clientDTO.setBlockDate(client.getBlockDate());
-            if (client.getClientDocs() != null) {
-                clientDTO.setClientDocsID(client.getClientDocs().getId());
-            }
+              ClientDTO clientDTO = mapClient_toClientDTOclass(client);
+
+//            clientDTO.setId(client.getId());
+//            clientDTO.setPassportNumber(client.getPassportNumber());
+//            clientDTO.setFirstName(client.getFirstName());
+//            clientDTO.setSurName(client.getSurName());
+//            clientDTO.setLastName(client.getLastName());
+//            clientDTO.setRegistrationDate(client.getRegistrationDate());
+//            if (client.getFamily() != null) {
+//                clientDTO.setFamilyID(client.getFamily().getId());
+//            }
+//            clientDTO.setTelephone(client.getTelephone());
+//            clientDTO.setEmail(client.getEmail());
+//            clientDTO.setStartPaymentDate(client.getStartPaymentDate());
+//            clientDTO.setStartServiceDate(client.getStartServiceDate());
+//            clientDTO.setServiceDescription(client.getServiceDescription());
+//            clientDTO.setBlocked(client.getBlocked());
+//            clientDTO.setBlockedReasonDescription(client.getBlockedReasonDescription());
+//            clientDTO.setBlockDate(client.getBlockDate());
+//            if (client.getClientDocs() != null) {
+//                clientDTO.setClientDocsID(client.getClientDocs().getId());
+//            }
             foundСlients.add(clientDTO);
         }
         return foundСlients;
@@ -529,19 +529,18 @@ public class ClientService {
 
     public Marker getLogMarker() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserName_inService = authentication.getName();
+        String currentUserRole = authentication.getAuthorities().toString();
         Marker marker = null;
-        if (currentUserName_inService.equals("user1")) {
-            marker = USER1;
-        } else if (currentUserName_inService.equals("user2")) {
-            marker = USER2;
-        } else if (currentUserName_inService.equals("admin")) {
+        if (currentUserRole.toLowerCase().contains("user")) {
+            marker = USER;
+        } else if (currentUserRole.toLowerCase().contains("admin")) {
             marker = ADMIN;
         } else {
             log.error("user logged in is not defined");
         }
         return marker;
     }
+
 
     public List<DoctorDTO> findAllDoctors() {
         List<DoctorDTO> doctorDTOList = new ArrayList<>();
