@@ -27,6 +27,10 @@ public class Doctor implements Serializable {
     @OneToMany(mappedBy = "doctor")
     private List<Client> clientList;
 
+    @OneToMany(mappedBy = "doctor")
+    private List<Assignment> assignmentList;
+
+
     @Column(name = "doctorFirstName", nullable = false)
     @NotBlank(message="DoctorFirstName is required")
     private String doctorFirstName;

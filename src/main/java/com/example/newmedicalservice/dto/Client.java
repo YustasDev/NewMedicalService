@@ -91,7 +91,7 @@ public class Client implements Serializable {
     @Column(name = "kxNumber")
     private String kxNumber;
 
-//    @OneToMany(mappedBy = "client")
-//    private List<Assignment> assignmentList;
+    @OneToMany(mappedBy = "client")
+    private List<Assignment> assignmentList;
 
 }

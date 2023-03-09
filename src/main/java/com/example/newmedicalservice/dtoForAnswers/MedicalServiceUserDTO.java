@@ -15,9 +15,9 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 public class MedicalServiceUserDTO {
 
-    private String id;
-    private String login;
-    private String password;
+    private String userId;
+    private String userLogin;
+    private String userPassword;
     private String userName;
     private String userEmail;
     private String userTel;

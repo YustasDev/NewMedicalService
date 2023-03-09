@@ -47,8 +47,8 @@ public class AdminService {
         Marker marker = clientService.getLogMarker();
 
         try {
-            newUser.setLogin(medicalServiceUserDTO.getLogin());
-            newUser.setPassword(passwordEncoder.encode(medicalServiceUserDTO.getPassword()));
+            newUser.setLogin(medicalServiceUserDTO.getUserLogin());
+            newUser.setPassword(passwordEncoder.encode(medicalServiceUserDTO.getUserPassword()));
             newUser.setUserName(medicalServiceUserDTO.getUserName());
             newUser.setUserEmail(medicalServiceUserDTO.getUserEmail());
             newUser.setUserTel(medicalServiceUserDTO.getUserTel());
@@ -68,9 +68,9 @@ public class AdminService {
     public MedicalServiceUserDTO mapMedicalServiceUser_toMedicalServiceUserDTO(MedicalServiceUser medicalServiceUser){
         MedicalServiceUserDTO medicalServiceUserDTO = new MedicalServiceUserDTO();
 
-        medicalServiceUserDTO.setId(String.valueOf(medicalServiceUser.getId()));
-        medicalServiceUserDTO.setLogin(medicalServiceUser.getLogin());
-        medicalServiceUserDTO.setPassword(medicalServiceUser.getPassword());
+        medicalServiceUserDTO.setUserId(String.valueOf(medicalServiceUser.getId()));
+        medicalServiceUserDTO.setUserLogin(medicalServiceUser.getLogin());
+        medicalServiceUserDTO.setUserPassword(medicalServiceUser.getPassword());
         medicalServiceUserDTO.setUserName(medicalServiceUser.getUserName());
         medicalServiceUserDTO.setUserTel(medicalServiceUser.getUserTel());
         medicalServiceUserDTO.setUserEmail(medicalServiceUser.getUserEmail());

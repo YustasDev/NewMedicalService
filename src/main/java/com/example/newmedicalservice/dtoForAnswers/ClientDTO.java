@@ -1,11 +1,13 @@
 package com.example.newmedicalservice.dtoForAnswers;
 
+import com.example.newmedicalservice.dto.Assignment;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Component
@@ -35,5 +37,6 @@ public class ClientDTO {
     private LocalDateTime blockDate;
     private Long clientDocsID;
     private String kxNumber;
+    private List<AssignmentDTO> assignmentList;
 
 }

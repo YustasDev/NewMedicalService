@@ -1,5 +1,6 @@
 package com.example.newmedicalservice.dtoForAnswers;
 
+import com.example.newmedicalservice.dto.Assignment;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,5 +25,5 @@ public class DoctorDTO {
     private String doctorAddres;
     private String doctorType;
     private String description;
-
+    private List<AssignmentDTO> assignmentList;
 }
