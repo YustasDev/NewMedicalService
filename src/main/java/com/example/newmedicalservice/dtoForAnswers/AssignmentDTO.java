@@ -33,6 +33,7 @@ public class AssignmentDTO {
     private String clientId;
     private String doctorId;
     private String assignmentType;
+    private Boolean isDone;
 
 
 }

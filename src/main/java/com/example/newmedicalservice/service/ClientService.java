@@ -1,10 +1,7 @@
 package com.example.newmedicalservice.service;
 
 import com.example.newmedicalservice.dto.*;
-import com.example.newmedicalservice.dtoForAnswers.ClientDTO;
-import com.example.newmedicalservice.dtoForAnswers.ClientDocsDTO;
-import com.example.newmedicalservice.dtoForAnswers.DoctorDTO;
-import com.example.newmedicalservice.dtoForAnswers.FamilyDTO;
+import com.example.newmedicalservice.dtoForAnswers.*;
 import com.example.newmedicalservice.repository.*;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -60,17 +57,22 @@ public class ClientService {
     private ImageTemplatesRepositories imageTemplatesRepositories;
     private DoctorRepository doctorRepository;
     private DoctorArchiveRepository doctorArchiveRepository;
+    private UserRepository userRepository;
+    private AssignmentRepository assignmentRepository;
 
     @Autowired
     public ClientService(ClientRepository clientRepository, FamilyRepository familyRepository,
                          ClientDocsRepository clientDocsRepository, ImageTemplatesRepositories imageTemplatesRepositories,
-                         DoctorRepository doctorRepository, DoctorArchiveRepository doctorArchiveRepository) {
+                         DoctorRepository doctorRepository, DoctorArchiveRepository doctorArchiveRepository,
+                         UserRepository userRepository, AssignmentRepository assignmentRepository) {
         this.clientRepository = clientRepository;
         this.familyRepository = familyRepository;
         this.clientDocsRepository = clientDocsRepository;
         this.imageTemplatesRepositories = imageTemplatesRepositories;
         this.doctorRepository = doctorRepository;
         this.doctorArchiveRepository = doctorArchiveRepository;
+        this.userRepository = userRepository;
+        this.assignmentRepository = assignmentRepository;
     }
 
 
@@ -216,28 +218,7 @@ public class ClientService {
         }
 
         for (Client client : selectedClients) {
-              ClientDTO clientDTO = mapClient_toClientDTOclass(client);
-
-//            clientDTO.setId(client.getId());
-//            clientDTO.setPassportNumber(client.getPassportNumber());
-//            clientDTO.setFirstName(client.getFirstName());
-//            clientDTO.setSurName(client.getSurName());
-//            clientDTO.setLastName(client.getLastName());
-//            clientDTO.setRegistrationDate(client.getRegistrationDate());
-//            if (client.getFamily() != null) {
-//                clientDTO.setFamilyID(client.getFamily().getId());
-//            }
-//            clientDTO.setTelephone(client.getTelephone());
-//            clientDTO.setEmail(client.getEmail());
-//            clientDTO.setStartPaymentDate(client.getStartPaymentDate());
-//            clientDTO.setStartServiceDate(client.getStartServiceDate());
-//            clientDTO.setServiceDescription(client.getServiceDescription());
-//            clientDTO.setBlocked(client.getBlocked());
-//            clientDTO.setBlockedReasonDescription(client.getBlockedReasonDescription());
-//            clientDTO.setBlockDate(client.getBlockDate());
-//            if (client.getClientDocs() != null) {
-//                clientDTO.setClientDocsID(client.getClientDocs().getId());
-//            }
+            ClientDTO clientDTO = mapClient_toClientDTOclass(client);
             foundСlients.add(clientDTO);
         }
         return foundСlients;
@@ -396,11 +377,10 @@ public class ClientService {
                 Integer clientID_DoctorInt = null;
                 try {
                     clientID_DoctorInt = Integer.valueOf(clientID_Doctor);
-                }
-                catch (NumberFormatException nfe){
+                } catch (NumberFormatException nfe) {
                     LOGGER.warn(marker, "clientID_Doctor is not defined: " + nfe);
                 }
-                if(clientID_DoctorInt != null) {
+                if (clientID_DoctorInt != null) {
                     Optional<Doctor> doctorOptional = doctorRepository.findById(clientID_DoctorInt);
                     if (doctorOptional.isPresent()) {
                         doctor = doctorOptional.get();
@@ -427,6 +407,7 @@ public class ClientService {
 
 
     public ClientDTO mapClient_toClientDTOclass(@NotNull Client client) {
+        List<AssignmentDTO> assignmentDTOList = new ArrayList<>();
         ClientDTO clientDTO = new ClientDTO();
         clientDTO.setId(client.getId());
         clientDTO.setPassportNumber(client.getPassportNumber());
@@ -449,8 +430,17 @@ public class ClientService {
             clientDTO.setClientDocsID(client.getClientDocs().getId());
         }
         clientDTO.setKxNumber(client.getKxNumber());
-        if(client.getDoctor() != null) {
+        if (client.getDoctor() != null) {
             clientDTO.setDoctorID(client.getDoctor().getId());
+        }
+
+        List<Assignment> assignmentList = client.getAssignmentList();
+        if(assignmentList != null) {
+            for (Assignment assignment : assignmentList) {
+                AssignmentDTO assignmentDTO = mapAssignment_toAssignmentDTO(assignment);
+                assignmentDTOList.add(assignmentDTO);
+            }
+            clientDTO.setAssignmentList(assignmentDTOList);
         }
         return clientDTO;
     }
@@ -500,6 +490,7 @@ public class ClientService {
     public DoctorDTO mapDoctor_toDoctorDTO(Doctor newDoctor) {
         Marker marker = getLogMarker();
         List<ClientDTO> clientDTOList = new ArrayList<>();
+        List<AssignmentDTO> assignmentDTOList = new ArrayList<>();
         DoctorDTO doctorDTO = new DoctorDTO();
 
         try {
@@ -520,6 +511,15 @@ public class ClientService {
                     clientDTOList.add(clientDTO);
                 }
                 doctorDTO.setClientList(clientDTOList);
+            }
+
+            List<Assignment> assignmentListFromDoctor = newDoctor.getAssignmentList();
+            if (assignmentListFromDoctor != null) {
+                for (Assignment assignment : assignmentListFromDoctor) {
+                    AssignmentDTO assignmentDTO = mapAssignment_toAssignmentDTO(assignment);
+                    assignmentDTOList.add(assignmentDTO);
+                }
+                doctorDTO.setAssignmentList(assignmentDTOList);
             }
         } catch (Exception e) {
             LOGGER.error(marker, "An error has occurred in the 'mapDoctor_toDoctorDTO' method ==> " + e);
@@ -549,18 +549,6 @@ public class ClientService {
             for (Doctor doctor : doctorList) {
                 DoctorDTO doctorDTO = mapDoctor_toDoctorDTO(doctor);
                 doctorDTOList.add(doctorDTO);
-
-//                DoctorDTO doctorDTO = new DoctorDTO();
-//                doctorDTO.setId(doctor.getId());
-//                doctorDTO.setDoctorFirstName(doctor.getDoctorFirstName());
-//                doctorDTO.setDoctorLastName(doctor.getDoctorLastName());
-//                doctorDTO.setDoctorSureName(doctor.getDoctorSureName());
-//                doctorDTO.setDoctorTelefon(doctor.getDoctorTelefon());
-//                doctorDTO.setDoctorEmail(doctor.getDoctorEmail());
-//                doctorDTO.setDoctorAddres(doctor.getDoctorAddres());
-//                doctorDTO.setDoctorType(String.valueOf(doctor.getDoctorType()));
-//                doctorDTO.setDescription(doctor.getDescription());
-//                doctorDTOList.add(doctorDTO);
             }
         }
         return doctorDTOList;
@@ -625,8 +613,7 @@ public class ClientService {
                 try {
                     Doctor.DoctorType typeEnumDoc = Doctor.DoctorType.valueOf(doctorType);
                     doctor.setDoctorType(typeEnumDoc);
-                }
-                catch (IllegalArgumentException iae){
+                } catch (IllegalArgumentException iae) {
                     LOGGER.error(marker, "No enum constant com.example.medicalservice.dto.Doctor.DoctorType." + doctorType);
                     LOGGER.error(marker, "Error received ==> " + iae);
                 }
@@ -649,27 +636,100 @@ public class ClientService {
         Family familyForModify = null;
         if (optionalFamily.isPresent()) {
             familyForModify = optionalFamily.get();
-            if(!familyName.isEmpty()){
+            if (!familyName.isEmpty()) {
                 familyForModify.setFamilyName(familyName);
             }
-            if(!familyMobile.isEmpty()){
+            if (!familyMobile.isEmpty()) {
                 familyForModify.setFamilyMobile(familyMobile);
             }
-            if(!familyDescription.isEmpty()){
+            if (!familyDescription.isEmpty()) {
                 familyForModify.setDescription(familyDescription);
             }
-            if(!familyHead.isEmpty()){
+            if (!familyHead.isEmpty()) {
                 familyForModify.setFamilyHead(familyHead);
             }
             familyRepository.save(familyForModify);
             LOGGER.info(marker, "Changes were made to the family's setting data with familyID = " + familyID);
-        }
-        else {
+        } else {
             LOGGER.error(marker, "Attempt to edit a Family with ID = '" + familyID +
                     "' failed because the Family with this ID does not exist in the database");
         }
         return familyForModify;
     }
+
+
+    public Assignment createNewAssignment(AssignmentDTO assignmentDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName_inService = authentication.getName();
+        Marker marker = getLogMarker();
+        Integer idUser = null;
+        try {
+            idUser = userRepository.findByLogin(currentUserName_inService).getId();
+        } catch (Exception e) {
+            LOGGER.error(marker, "An error occurred when searching for a user by name: '"
+                    + currentUserName_inService + "' ==> " + e);
+        }
+
+        Assignment newAssignment = new Assignment();
+        try {
+            newAssignment.setCheckupAddress(assignmentDTO.getCheckupAddress());
+            newAssignment.setCheckupMobile(assignmentDTO.getCheckupMobile());
+            newAssignment.setCheckupEmail(assignmentDTO.getCheckupEmail());
+            newAssignment.setCheckupDescription(assignmentDTO.getCheckupDescription());
+            newAssignment.setDateTimeAppointment(LocalDateTime.now());
+            newAssignment.setDateTimeWhenToDo(assignmentDTO.getDateTimeWhenToDo());
+            newAssignment.setAssignmentDescription(assignmentDTO.getAssignmentDescription());
+            newAssignment.setIdUser(idUser);
+
+            Optional<Doctor> doctorOptional = doctorRepository.findById(Integer.valueOf(assignmentDTO.getDoctorId()));
+            if (doctorOptional.isPresent()) {
+                newAssignment.setDoctor(doctorOptional.get());
+            }
+
+            Optional<Client> clientOptional = clientRepository.findById(assignmentDTO.getClientId());
+            if (clientOptional.isPresent()) {
+                newAssignment.setClient(clientOptional.get());
+            }
+
+            newAssignment.setAssignmentType(Assignment.AssignmentType.valueOf(assignmentDTO.getAssignmentType()));
+            newAssignment.setIsDone(assignmentDTO.getIsDone());
+            assignmentRepository.save(newAssignment);
+            LOGGER.info(marker, "There is currently a user in the service: '" + currentUserName_inService + "'");
+            LOGGER.info(marker, "The 'Assignment' object was successfully created with ID = " + newAssignment.getId());
+
+        } catch (Exception e) {
+            LOGGER.info(marker, "There is currently a user in the service: '" + currentUserName_inService + "'");
+            LOGGER.error(marker, "An error occurred when creating the 'Assignment' object ==> " + e);
+        }
+        return newAssignment;
+    }
+
+
+    public AssignmentDTO mapAssignment_toAssignmentDTO(Assignment assignment) {
+        Marker marker = getLogMarker();
+        AssignmentDTO assignmentDTO = new AssignmentDTO();
+        try {
+            assignmentDTO.setAssignmentId(String.valueOf(assignment.getId()));
+            assignmentDTO.setCheckupAddress(assignment.getCheckupAddress());
+            assignmentDTO.setCheckupMobile(assignment.getCheckupMobile());
+            assignmentDTO.setCheckupEmail(assignment.getCheckupEmail());
+            assignmentDTO.setCheckupDescription(assignment.getCheckupDescription());
+            assignmentDTO.setDateTimeAppointment(assignment.getDateTimeAppointment());
+            assignmentDTO.setDateTimeWhenToDo(assignment.getDateTimeWhenToDo());
+            assignmentDTO.setAssignmentDescription(assignment.getAssignmentDescription());
+            assignmentDTO.setIdUser(String.valueOf(assignment.getIdUser()));
+            assignmentDTO.setClientId(String.valueOf(assignment.getClient().getId()));
+            assignmentDTO.setDoctorId(String.valueOf(assignment.getDoctor().getId()));
+            assignmentDTO.setAssignmentType(assignment.getAssignmentType().name());
+            assignmentDTO.setIsDone(assignment.getIsDone());
+        }
+        catch (Exception e){
+            LOGGER.error(marker, "An error has occurred in the 'mapAssignment_toAssignmentDTO' method ==> " + e);
+            return null;
+        }
+        return assignmentDTO;
+    }
+
 
 
 

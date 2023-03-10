@@ -57,19 +57,22 @@ public class Assignment implements Serializable {
     private Integer idUser;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="client_id")
-    @ToString.Exclude
-    private Client client;
-
-    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "doctor_id")
     @ToString.Exclude
     private Doctor doctor;
 
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="client_id")
+    @ToString.Exclude
+    private Client client;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('Type1', 'Type2', 'Type3')")
     private AssignmentType assignmentType;
+
+    @Basic
+    @Column(name = "isDone", nullable = false)
+    private Boolean isDone;
 
 
     public enum AssignmentType{

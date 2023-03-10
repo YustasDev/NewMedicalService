@@ -2,10 +2,7 @@ package com.example.newmedicalservice.controllers;
 
 
 import com.example.newmedicalservice.dto.*;
-import com.example.newmedicalservice.dtoForAnswers.ClientDTO;
-import com.example.newmedicalservice.dtoForAnswers.ClientDocsDTO;
-import com.example.newmedicalservice.dtoForAnswers.DoctorDTO;
-import com.example.newmedicalservice.dtoForAnswers.FamilyDTO;
+import com.example.newmedicalservice.dtoForAnswers.*;
 import com.example.newmedicalservice.repository.ClientRepository;
 import com.example.newmedicalservice.repository.DoctorArchiveRepository;
 import com.example.newmedicalservice.repository.DoctorRepository;
@@ -40,9 +37,6 @@ import java.util.Optional;
 public class ClientController {
 
     private static final Logger LOGGER = LogManager.getLogger(ClientController.class);
-   // private static final Marker USER = MarkerManager.getMarker("USER");
-  //  private static final Marker USER2 = MarkerManager.getMarker("USER2");
-  //  private static final Marker ADMIN = MarkerManager.getMarker("ADMIN");
     final static String REGEXEMAIL = "^[\\w!#$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
 
 
@@ -355,6 +349,18 @@ public class ClientController {
     }
 
 
+    @CrossOrigin
+    @PostMapping("/createNewAssignment")
+    ResponseEntity<?> createAssignment(@RequestBody AssignmentDTO assignmentDTO) {
+        Assignment newAssignment = clientService.createNewAssignment(assignmentDTO);
+        AssignmentDTO assignmentDTO_forAnswer = clientService.mapAssignment_toAssignmentDTO(newAssignment);
+        if(assignmentDTO_forAnswer != null){
+            return ResponseEntity.status(HttpStatus.CREATED).body(assignmentDTO_forAnswer);
+        }
+        else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Creation error new Assignment");
+        }
+    }
 
 
 
