@@ -134,4 +134,46 @@ public class AdminService {
         }
         return userRoles;
     }
+
+    public Boolean deleteUser(String userId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName_inService = authentication.getName();
+        Marker marker = clientService.getLogMarker();
+        Optional<MedicalServiceUser> optionalUser = userRepository.findById(Integer.valueOf(userId));
+        try {
+            if (optionalUser.isPresent()) {
+            userRepository.deleteById(Integer.valueOf(userId));
+                LOGGER.info(marker, "There is currently a user in the service: '" + currentUserName_inService + "'");
+                LOGGER.info(marker, "The user with ID = '" + userId + "'  has been deleted");
+            return true;
+            }
+            else {
+                LOGGER.warn(marker, "There is currently a user in the service: '" + currentUserName_inService + "'");
+                LOGGER.warn(marker, "User with ID = '" + userId + "' does not exist in the DB");
+                return false;
+            }
+        }
+        catch (Exception e){
+            LOGGER.warn(marker, "There is currently a user in the service: '" + currentUserName_inService + "'");
+            LOGGER.warn(marker, "When trying to delete a user with ID = '" + userId + "'  an error ==> " + e);
+        }
+        return false;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

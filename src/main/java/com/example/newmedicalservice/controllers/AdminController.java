@@ -58,7 +58,7 @@ public class AdminController {
 
     @CrossOrigin
     @PatchMapping("/modifyUser")
-    ResponseEntity<?> modifyClientData(@RequestParam(name="userId", required=true) String userId,
+    ResponseEntity<?> modifyUser(@RequestParam(name="userId", required=true) String userId,
                                        @RequestParam(name="userName", required=false) String userName,
                                        @RequestParam(name="userEmail", required=false) String userEmail,
                                        @RequestParam(name="userTel", required=false) String userTel){
@@ -72,12 +72,20 @@ public class AdminController {
         else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such user with ID = " + userId);
         }
-
-
-
     }
 
+    @CrossOrigin
+    @DeleteMapping("/deleteUser")
+    ResponseEntity<?> deleteUser(@RequestParam(name="userId", required=true) String userId){
 
+        Boolean resultDelete = adminService.deleteUser(userId);
+        if(resultDelete){
+            return ResponseEntity.status(HttpStatus.OK).body("User with ID = '" + userId + "' has been removed from the system");
+        }
+        else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such user with ID = " + userId);
+        }
+    }
 
 
 }
