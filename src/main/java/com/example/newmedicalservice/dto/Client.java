@@ -1,5 +1,6 @@
 package com.example.newmedicalservice.dto;
 
+import com.example.newmedicalservice.security.AttributeEncryptor;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -88,6 +89,7 @@ public class Client implements Serializable {
     @ToString.Exclude
     private ClientDocs clientDocs;
 
+    @Convert(converter = AttributeEncryptor.class)
     @Column(name = "kxNumber")
     private String kxNumber;
 
