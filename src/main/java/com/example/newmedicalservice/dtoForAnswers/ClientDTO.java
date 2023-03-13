@@ -1,6 +1,7 @@
 package com.example.newmedicalservice.dtoForAnswers;
 
 import com.example.newmedicalservice.dto.Assignment;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,11 +30,18 @@ public class ClientDTO {
     //    @ManyToOne(cascade = CascadeType.MERGE)
 //    @JoinColumn(name="paymentPlan_id")
 //    private PaymentPlan paymentPlan;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", shape = JsonFormat.Shape.STRING)
     private LocalDateTime startPaymentDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", shape = JsonFormat.Shape.STRING)
     private LocalDateTime startServiceDate;
+
     private String serviceDescription;
     private Boolean blocked;
     private String blockedReasonDescription;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", shape = JsonFormat.Shape.STRING)
     private LocalDateTime blockDate;
     private Long clientDocsID;
     private String kxNumber;

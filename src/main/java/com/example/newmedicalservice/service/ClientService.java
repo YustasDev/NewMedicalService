@@ -585,6 +585,7 @@ public class ClientService {
         Marker marker = getLogMarker();
         Optional<Doctor> optionalDoctor = doctorRepository.findById(Integer.valueOf(doctorID));
         Doctor doctor = null;
+        try{
         if (optionalDoctor.isPresent()) {
             doctor = optionalDoctor.get();
 
@@ -623,6 +624,10 @@ public class ClientService {
         } else {
             LOGGER.error(marker, "Attempt to edit a doctor with ID = '" + doctorID +
                     "' failed because the doctor with this ID does not exist in the database");
+        }
+      }
+        catch (Exception e){
+            LOGGER.error(marker, "Error received ==> " + e);
         }
         return doctor;
     }
@@ -728,6 +733,95 @@ public class ClientService {
             return null;
         }
         return assignmentDTO;
+    }
+
+    public List<String> getAssignmentType() {
+        List<String> assignmentTypes = new ArrayList<>();
+        Assignment.AssignmentType[] assignmentTypesArray = Assignment.AssignmentType.values();
+        List<Assignment.AssignmentType> listOfAssignmentType = Arrays.asList(assignmentTypesArray);
+        for (Assignment.AssignmentType aat : listOfAssignmentType) {
+            String type = aat.name();
+            assignmentTypes.add(type);
+        }
+        return assignmentTypes;
+    }
+
+
+    public List<AssignmentDTO> getAllAssignments() {
+
+        List<Assignment> allAssignments = new ArrayList<>();
+        List<AssignmentDTO> allAssignmentsDTO = new ArrayList<>();
+        allAssignments = assignmentRepository.findAll();
+        if (!allAssignments.isEmpty()) {
+            for (Assignment assignment : allAssignments) {
+                AssignmentDTO assignmentDTO = mapAssignment_toAssignmentDTO(assignment);
+                allAssignmentsDTO.add(assignmentDTO);
+            }
+        }
+        return allAssignmentsDTO;
+    }
+
+
+    public Assignment redactAssignment(String assignmentID, String assignmentCheckupAddress, String assignmentCheckupMobile,
+                                       String assignmentCheckupEmail, String assignmentCheckupDescription, String assignmentDateTimeWhenToDo,
+                                       String assignmentDescription, String assignmentClientId, String assignmentDoctorId,
+                                       String assignmentType, String assignmentIsDone) {
+
+        Marker marker = getLogMarker();
+        Optional<Assignment> optionalAssignment = assignmentRepository.findById(Long.valueOf(assignmentID));
+        Assignment assignment = null;
+
+        try {
+            if (optionalAssignment.isPresent()) {
+                assignment = optionalAssignment.get();
+
+                if (assignmentCheckupAddress != null) {
+                    assignment.setCheckupAddress(assignmentCheckupAddress);
+                }
+                if (assignmentCheckupMobile != null) {
+                    assignment.setCheckupMobile(assignmentCheckupMobile);
+                }
+                if (assignmentCheckupEmail != null) {
+                    assignment.setCheckupEmail(assignmentCheckupEmail);
+                }
+                if (assignmentCheckupDescription != null) {
+                    assignment.setCheckupDescription(assignmentCheckupDescription);
+                }
+                if (assignmentDateTimeWhenToDo != null) {
+                    assignment.setDateTimeWhenToDo(LocalDateTime.parse(assignmentDateTimeWhenToDo));
+                }
+                if (assignmentDescription != null) {
+                    assignment.setAssignmentDescription(assignmentDescription);
+                }
+                if (assignmentClientId != null) {
+                    assignment.setClient(clientRepository.getReferenceById(assignmentClientId));
+                }
+                if (assignmentDoctorId != null) {
+                    assignment.setDoctor(doctorRepository.getReferenceById(Integer.valueOf(assignmentDoctorId)));
+                }
+                if (assignmentType != null) {
+                    try {
+                        Assignment.AssignmentType typeOfAssignment = Assignment.AssignmentType.valueOf(assignmentType);
+                        assignment.setAssignmentType(typeOfAssignment);
+                    } catch (IllegalArgumentException iae) {
+                        LOGGER.error(marker, "No enum constant com.example.medicalservice.dto.Assignment.AssignmentType." + assignmentType);
+                        LOGGER.error(marker, "Error received ==> " + iae);
+                    }
+                }
+                if (assignmentIsDone != null) {
+                    assignment.setIsDone(Boolean.valueOf(assignmentIsDone));
+                }
+                assignmentRepository.save(assignment);
+                LOGGER.info(marker, " The object 'Assignment' has been successfully edited: " + assignment.toString());
+            } else {
+                LOGGER.error(marker, "Attempt to edit a assignment with ID = '" + assignmentID +
+                        "' failed because the assignment with this ID does not exist in the database");
+            }
+        }
+      catch (Exception e){
+                LOGGER.error(marker, "Error received ==> " + e);
+            }
+        return assignment;
     }
 
 

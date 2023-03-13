@@ -1,11 +1,18 @@
 package com.example.newmedicalservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 @Data
@@ -15,6 +22,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "assignment")
 public class Assignment implements Serializable {
+
 
     @Id
     @Column(name = "id")
@@ -36,16 +44,15 @@ public class Assignment implements Serializable {
 
     @Column(name = "checkupDescription", nullable = false)
     @NotBlank(message="CheckupDescription is required")
-    private String CheckupDescription;
+    private String checkupDescription;
+
 
     @Basic
     @Column(name = "dateTimeAppointment", nullable = false)
-    @NotBlank(message="DateTimeAppointment is required")
     private LocalDateTime dateTimeAppointment;
 
     @Basic
     @Column(name = "dateTimeWhenToDo", nullable = false)
-    @NotBlank(message="DateTimeWhenToDo is required")
     private LocalDateTime dateTimeWhenToDo;
 
     @Column(name = "assignmentDescription", nullable = false)
@@ -53,7 +60,6 @@ public class Assignment implements Serializable {
     private String assignmentDescription;
 
     @Column(name = "idUser", nullable = false)
-    @NotBlank(message="MedicalServiceUser is required")
     private Integer idUser;
 
     @ManyToOne(cascade = CascadeType.ALL)
@@ -73,7 +79,6 @@ public class Assignment implements Serializable {
     @Basic
     @Column(name = "isDone", nullable = false)
     private Boolean isDone;
-
 
     public enum AssignmentType{
         Type1,

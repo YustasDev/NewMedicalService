@@ -3,6 +3,7 @@ package com.example.newmedicalservice.dtoForAnswers;
 import com.example.newmedicalservice.dto.Assignment;
 import com.example.newmedicalservice.dto.Client;
 import com.example.newmedicalservice.dto.Doctor;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,10 +25,14 @@ public class AssignmentDTO {
     private String checkupAddress;
     private String checkupMobile;
     private String checkupEmail;
-    private String CheckupDescription;
+    private String checkupDescription;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", shape = JsonFormat.Shape.STRING)
     private LocalDateTime dateTimeAppointment;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", shape = JsonFormat.Shape.STRING)
     private LocalDateTime dateTimeWhenToDo;
+
     private String assignmentDescription;
     private String idUser;
     private String clientId;

@@ -363,6 +363,47 @@ public class ClientController {
         }
     }
 
+    @CrossOrigin
+    @GetMapping("/getAssignmentType")
+    ResponseEntity<?> getAssignmentType() {
+        List<String> assignmentTypeList = clientService.getAssignmentType();
+        return ResponseEntity.status(HttpStatus.OK).body(assignmentTypeList);
+    }
+
+    @CrossOrigin
+    @GetMapping("/selectAllAssignments")
+    ResponseEntity<?> selectAssignments() {
+        List<AssignmentDTO> assignmentDTOList = clientService.getAllAssignments();
+        return ResponseEntity.status(HttpStatus.OK).body(assignmentDTOList);
+    }
+
+
+    @CrossOrigin
+    @PatchMapping("/modifyAssignment")
+    ResponseEntity<?> modifyAssignment(@RequestParam(name="assignmentID", required=true) String assignmentID,
+                                   @RequestParam(name="assignmentCheckupAddress", required = false) String assignmentCheckupAddress,
+                                   @RequestParam(name="assignmentCheckupMobile", required = false) String assignmentCheckupMobile,
+                                   @RequestParam(name="assignmentCheckupEmail", required = false) String assignmentCheckupEmail,
+                                   @RequestParam(name="assignmentCheckupDescription", required = false) String assignmentCheckupDescription,
+                                   @RequestParam(name="assignmentDateTimeWhenToDo", required = false) String assignmentDateTimeWhenToDo,
+                                   @RequestParam(name="assignmentDescription", required = false) String assignmentDescription,
+                                   @RequestParam(name="assignmentClientId", required = false) String assignmentClientId,
+                                   @RequestParam(name="assignmentDoctorId", required = false) String assignmentDoctorId,
+                                   @RequestParam(name="assignmentType", required = false) String assignmentType,
+                                   @RequestParam(name="assignmentIsDone", required = false) String assignmentIsDone){
+
+        Assignment modifiedAssignment = clientService.redactAssignment(assignmentID, assignmentCheckupAddress, assignmentCheckupMobile,
+                                        assignmentCheckupEmail, assignmentCheckupDescription, assignmentDateTimeWhenToDo,
+                                        assignmentDescription, assignmentClientId, assignmentDoctorId, assignmentType, assignmentIsDone);
+
+        if(modifiedAssignment != null){
+            AssignmentDTO assignmentDTO_forAnswer = clientService.mapAssignment_toAssignmentDTO(modifiedAssignment);
+            return ResponseEntity.status(HttpStatus.CREATED).body(assignmentDTO_forAnswer);
+        }
+        else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such assignment with ID = " + assignmentID);
+        }
+    }
 
 
 
