@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -748,7 +749,6 @@ public class ClientService {
 
 
     public List<AssignmentDTO> getAllAssignments() {
-
         List<Assignment> allAssignments = new ArrayList<>();
         List<AssignmentDTO> allAssignmentsDTO = new ArrayList<>();
         allAssignments = assignmentRepository.findAll();
@@ -788,7 +788,9 @@ public class ClientService {
                     assignment.setCheckupDescription(assignmentCheckupDescription);
                 }
                 if (assignmentDateTimeWhenToDo != null) {
-                    assignment.setDateTimeWhenToDo(LocalDateTime.parse(assignmentDateTimeWhenToDo));
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                    LocalDateTime dateTime = LocalDateTime.parse(assignmentDateTimeWhenToDo, formatter);
+                    assignment.setDateTimeWhenToDo(dateTime);
                 }
                 if (assignmentDescription != null) {
                     assignment.setAssignmentDescription(assignmentDescription);
@@ -820,13 +822,27 @@ public class ClientService {
         }
       catch (Exception e){
                 LOGGER.error(marker, "Error received ==> " + e);
+                return null;
             }
         return assignment;
     }
 
 
+    public List<AssignmentDTO> getAssignmentsForDay(String date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(date, formatter);
+        LocalDateTime dataPlusDay = dateTime.plusDays(1);
 
-
-
+        List<Assignment> assignmentsForDay = new ArrayList<>();
+        List<AssignmentDTO> assignmentsDTOForDay = new ArrayList<>();
+        assignmentsForDay = assignmentRepository.findByDateTimeWhenToDoBetween(dateTime, dataPlusDay);
+        if (!assignmentsForDay.isEmpty()) {
+            for (Assignment assignment : assignmentsForDay) {
+                AssignmentDTO assignmentDTO = mapAssignment_toAssignmentDTO(assignment);
+                assignmentsDTOForDay.add(assignmentDTO);
+            }
+        }
+        return assignmentsDTOForDay;
+    }
 }
 

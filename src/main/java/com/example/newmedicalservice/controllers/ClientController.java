@@ -13,18 +13,18 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.RequestContext;
 
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -207,7 +207,7 @@ public class ClientController {
 
 
     @CrossOrigin
-    @GetMapping("/selectClient")
+    @PostMapping("/selectClient")
     ResponseEntity<?> selectClientBy(@RequestParam(name="clientID", required=false) String id,
                                      @RequestParam(name="clientPassportNumber", required=false) String passportNumber,
                                      @RequestParam(name="clientTelephon", required=false) String telephon,
@@ -405,6 +405,16 @@ public class ClientController {
         }
     }
 
+
+    @CrossOrigin
+    @PostMapping("/getAssignmentsForDay")
+    ResponseEntity<?> getAssignmentsForDay(@RequestParam(name="assignmentDateTimeWhenToDo", required=true) String assignmentDateTimeWhenToDo){
+        List<AssignmentDTO> assignmentForDay = clientService.getAssignmentsForDay(assignmentDateTimeWhenToDo);
+        return ResponseEntity.status(HttpStatus.OK).body(assignmentForDay);
+    }
+
+//    @Autowired
+//    HttpServletRequest httpServletRequest;
 
 
 
