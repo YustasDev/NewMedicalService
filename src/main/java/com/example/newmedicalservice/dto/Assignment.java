@@ -63,12 +63,12 @@ public class Assignment implements Serializable {
     private Integer idUser;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "doctor_id")
+    @JoinColumn(name = "doctor_id", nullable = false)
     @ToString.Exclude
     private Doctor doctor;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="client_id")
+    @JoinColumn(name="client_id", nullable = false)
     @ToString.Exclude
     private Client client;
 

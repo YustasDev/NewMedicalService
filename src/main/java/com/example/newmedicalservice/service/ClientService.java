@@ -373,6 +373,10 @@ public class ClientService {
             if (clientBlockDate != null) {
                 client.setBlockDate(clientBlockDate);
             }
+            if(clientBlockDate == null && clientBlocked == null){
+                client.setBlockDate(clientBlockDate);
+                client.setBlocked(false);
+            }
             if (clientID_Doctor != null) {
                 Doctor doctor = null;
                 Integer clientID_DoctorInt = null;
@@ -398,7 +402,7 @@ public class ClientService {
                 }
             }
             clientRepository.save(client);
-            LOGGER.info(marker, "Client with ID = '" + client.getId() + "' changed by secretary: '" + marker.getName());
+            LOGGER.info(marker, "Client with ID = '" + client.getId() + "' changed by user: '" + marker.getName() + "'");
         } else {
             LOGGER.error(marker, "When trying to edit a client with a passport number of '"
                     + clientPassportNumber + "' the client is found not to exist");
@@ -436,7 +440,7 @@ public class ClientService {
         }
 
         List<Assignment> assignmentList = client.getAssignmentList();
-        if(assignmentList != null) {
+        if (assignmentList != null) {
             for (Assignment assignment : assignmentList) {
                 AssignmentDTO assignmentDTO = mapAssignment_toAssignmentDTO(assignment);
                 assignmentDTOList.add(assignmentDTO);
@@ -586,48 +590,47 @@ public class ClientService {
         Marker marker = getLogMarker();
         Optional<Doctor> optionalDoctor = doctorRepository.findById(Integer.valueOf(doctorID));
         Doctor doctor = null;
-        try{
-        if (optionalDoctor.isPresent()) {
-            doctor = optionalDoctor.get();
+        try {
+            if (optionalDoctor.isPresent()) {
+                doctor = optionalDoctor.get();
 
-            if (!doctorFirstName.isEmpty()) {
-                doctor.setDoctorFirstName(doctorFirstName);
-            }
-            if (!doctorLastName.isEmpty()) {
-                doctor.setDoctorLastName(doctorLastName);
-            }
-            if (!doctorSureName.isEmpty()) {
-                doctor.setDoctorSureName(doctorSureName);
-            }
-            if (!doctorTelefon.isEmpty()) {
-                doctor.setDoctorTelefon(doctorTelefon);
-            }
-            if (!doctorEmail.isEmpty()) {
-                doctor.setDoctorEmail(doctorEmail);
-            }
-            if (!doctorAddres.isEmpty()) {
-                doctor.setDoctorAddres(doctorAddres);
-            }
-            if (!description.isEmpty()) {
-                doctor.setDescription(description);
-            }
-            if (!doctorType.isEmpty()) {
-                try {
-                    Doctor.DoctorType typeEnumDoc = Doctor.DoctorType.valueOf(doctorType);
-                    doctor.setDoctorType(typeEnumDoc);
-                } catch (IllegalArgumentException iae) {
-                    LOGGER.error(marker, "No enum constant com.example.medicalservice.dto.Doctor.DoctorType." + doctorType);
-                    LOGGER.error(marker, "Error received ==> " + iae);
+                if (!doctorFirstName.isEmpty()) {
+                    doctor.setDoctorFirstName(doctorFirstName);
                 }
+                if (!doctorLastName.isEmpty()) {
+                    doctor.setDoctorLastName(doctorLastName);
+                }
+                if (!doctorSureName.isEmpty()) {
+                    doctor.setDoctorSureName(doctorSureName);
+                }
+                if (!doctorTelefon.isEmpty()) {
+                    doctor.setDoctorTelefon(doctorTelefon);
+                }
+                if (!doctorEmail.isEmpty()) {
+                    doctor.setDoctorEmail(doctorEmail);
+                }
+                if (!doctorAddres.isEmpty()) {
+                    doctor.setDoctorAddres(doctorAddres);
+                }
+                if (!description.isEmpty()) {
+                    doctor.setDescription(description);
+                }
+                if (!doctorType.isEmpty()) {
+                    try {
+                        Doctor.DoctorType typeEnumDoc = Doctor.DoctorType.valueOf(doctorType);
+                        doctor.setDoctorType(typeEnumDoc);
+                    } catch (IllegalArgumentException iae) {
+                        LOGGER.error(marker, "No enum constant com.example.medicalservice.dto.Doctor.DoctorType." + doctorType);
+                        LOGGER.error(marker, "Error received ==> " + iae);
+                    }
+                }
+                doctorRepository.save(doctor);
+                LOGGER.info(marker, " The object 'Doctor' has been successfully edited: " + doctor.toString());
+            } else {
+                LOGGER.error(marker, "Attempt to edit a doctor with ID = '" + doctorID +
+                        "' failed because the doctor with this ID does not exist in the database");
             }
-            doctorRepository.save(doctor);
-            LOGGER.info(marker, " The object 'Doctor' has been successfully edited: " + doctor.toString());
-        } else {
-            LOGGER.error(marker, "Attempt to edit a doctor with ID = '" + doctorID +
-                    "' failed because the doctor with this ID does not exist in the database");
-        }
-      }
-        catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error(marker, "Error received ==> " + e);
         }
         return doctor;
@@ -692,6 +695,8 @@ public class ClientService {
                 newAssignment.setDoctor(doctorOptional.get());
             }
 
+            //    Client currentClient = clientRepository.findByPassportNumber()
+
             Optional<Client> clientOptional = clientRepository.findById(assignmentDTO.getClientId());
             if (clientOptional.isPresent()) {
                 newAssignment.setClient(clientOptional.get());
@@ -728,8 +733,7 @@ public class ClientService {
             assignmentDTO.setDoctorId(String.valueOf(assignment.getDoctor().getId()));
             assignmentDTO.setAssignmentType(assignment.getAssignmentType().name());
             assignmentDTO.setIsDone(assignment.getIsDone());
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error(marker, "An error has occurred in the 'mapAssignment_toAssignmentDTO' method ==> " + e);
             return null;
         }
@@ -819,11 +823,10 @@ public class ClientService {
                 LOGGER.error(marker, "Attempt to edit a assignment with ID = '" + assignmentID +
                         "' failed because the assignment with this ID does not exist in the database");
             }
+        } catch (Exception e) {
+            LOGGER.error(marker, "Error received ==> " + e);
+            return null;
         }
-      catch (Exception e){
-                LOGGER.error(marker, "Error received ==> " + e);
-                return null;
-            }
         return assignment;
     }
 
@@ -844,5 +847,27 @@ public class ClientService {
         }
         return assignmentsDTOForDay;
     }
+
+
+    public List<AssignmentDTO> getUnfulfilledAssignments() {
+        LocalDateTime dateTimeToday = LocalDateTime.now();
+        List<Assignment> unfulfilledAssignments = new ArrayList<>();
+        List<AssignmentDTO> unfulfilledAssignmentsDTO = new ArrayList<>();
+        unfulfilledAssignments = assignmentRepository.findByDateTimeWhenToDoIsBeforeAndIsDone(dateTimeToday, false);
+        if (!unfulfilledAssignments.isEmpty()) {
+            for (Assignment assignment : unfulfilledAssignments) {
+                AssignmentDTO assignmentDTO = mapAssignment_toAssignmentDTO(assignment);
+                unfulfilledAssignmentsDTO.add(assignmentDTO);
+            }
+        }
+        return unfulfilledAssignmentsDTO;
+    }
+
+
+
+
+
+
+
 }
 

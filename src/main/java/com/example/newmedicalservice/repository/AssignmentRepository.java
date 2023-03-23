@@ -15,4 +15,5 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
     Optional<Assignment> findById(Long id);
 
     List<Assignment> findByDateTimeWhenToDoBetween(LocalDateTime dataTime, LocalDateTime dataTimePlusDay);
+    List<Assignment> findByDateTimeWhenToDoIsBeforeAndIsDone(LocalDateTime dataTime, Boolean isDone);
 }

@@ -29,6 +29,7 @@ import javax.validation.ConstraintViolationException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -278,14 +279,29 @@ public class ClientController {
                                        @RequestParam(name="clientTelefon", required=false) String clientTelefon,
                                        @RequestParam(name="clientServiceDescription", required=false) String clientServiceDescription,
                                        @RequestParam(name="clientFamilyID", required=false) String clientFamilyID,
-                                       @RequestParam(name="clientStartPaymentDate", required=false) LocalDateTime clientStartPaymentDate,
-                                       @RequestParam(name="clientStartServiceDate", required=false) LocalDateTime clientStartServiceDate,
+                                       @RequestParam(name="clientStartPaymentDate", required=false) String clientStartPaymentDateStr,
+                                       @RequestParam(name="clientStartServiceDate", required=false) String clientStartServiceDateStr,
                                        @RequestParam(name="clientBlocked", required=false) Boolean clientBlocked,
                                        @RequestParam(name="clientBlockedReasonDescription", required=false) String clientBlockedReasonDescription,
-                                       @RequestParam(name="clientBlockDate", required=false) LocalDateTime clientBlockDate,
+                                       @RequestParam(name="clientBlockDate", required=false) String clientBlockDateStr,
                                        @RequestParam(name="clientID_Doctor", required=false) String clientID_Doctor){
         //    @RequestParam(name="clientIDPaymentPlan", required=false) String clientIDPaymentPlan,
 
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime clientStartPaymentDate = null;
+        LocalDateTime clientStartServiceDate = null;
+        LocalDateTime clientBlockDate = null;
+
+        if(!clientStartPaymentDateStr.isEmpty()){
+            clientStartPaymentDate = LocalDateTime.parse(clientStartPaymentDateStr, formatter);
+        }
+        if(!clientStartServiceDateStr.isEmpty()){
+            clientStartServiceDate = LocalDateTime.parse(clientStartServiceDateStr, formatter);
+        }
+        if(!clientBlockDateStr.isEmpty()){
+            clientBlockDate = LocalDateTime.parse(clientBlockDateStr, formatter);
+        }
 
         Client clientAfterRedact = clientService.redactClientData(clientPassportNumber, kxNumber, clientFirstName, clientLastName, clientSurname,
                 clientEmail, clientTelefon, clientServiceDescription, clientFamilyID, clientStartPaymentDate,
@@ -353,6 +369,15 @@ public class ClientController {
     @CrossOrigin
     @PostMapping("/createNewAssignment")
     ResponseEntity<?> createAssignment(@RequestBody AssignmentDTO assignmentDTO) {
+        Marker marker = clientService.getLogMarker();
+        String doctorID = assignmentDTO.getDoctorId();
+        String clientID = assignmentDTO.getClientId();
+        if(doctorID == null || clientID == null){
+            LOGGER.error(marker, "doctorID= " + doctorID + " / clientID= " + clientID);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It is not possible to create a new Assignment because clientID or doctorID == null");
+        }
+
+
         Assignment newAssignment = clientService.createNewAssignment(assignmentDTO);
         AssignmentDTO assignmentDTO_forAnswer = clientService.mapAssignment_toAssignmentDTO(newAssignment);
         if(assignmentDTO_forAnswer != null){
@@ -374,6 +399,13 @@ public class ClientController {
     @GetMapping("/selectAllAssignments")
     ResponseEntity<?> selectAssignments() {
         List<AssignmentDTO> assignmentDTOList = clientService.getAllAssignments();
+        return ResponseEntity.status(HttpStatus.OK).body(assignmentDTOList);
+    }
+
+    @CrossOrigin
+    @GetMapping("/getUnfulfilledAssignments")
+    ResponseEntity<?> getUnfulfilledAssignments(){
+        List<AssignmentDTO> assignmentDTOList = clientService.getUnfulfilledAssignments();
         return ResponseEntity.status(HttpStatus.OK).body(assignmentDTOList);
     }
 

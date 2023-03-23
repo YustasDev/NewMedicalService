@@ -1,7 +1,21 @@
 # example values
 
 server:
-port: 8080
+  port: 8080
+  ssl:
+    keyStoreType: PKCS12
+    key-store: /home/progforce/NewMedicalService/src/main/resources/keystore/certificateMS.p12
+    key-store-password: ENC(BVN7v6x+lYVu1GyR3ymw5w==)
+
+
+# https://www.springcloud.io/post/2022-04/spring-samesite/#gsc.tab=0
+  servlet:
+    session:
+      cookie:
+        same-site: None
+        secure: true
+
+
 
 jasypt:
   encryptor:
