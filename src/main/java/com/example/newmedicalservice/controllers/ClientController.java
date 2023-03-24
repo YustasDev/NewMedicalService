@@ -61,6 +61,30 @@ public class ClientController {
         this.doctorArchiveRepository = doctorArchiveRepository;
     }
 
+
+//    @CrossOrigin
+//    @PostMapping("/getDocument")
+//    ResponseEntity<?> returnDocument(@RequestParam(name="clientID", required=true) String id,
+//                                     @RequestParam(name="documentType", required=true) String document) {
+//
+//    }
+
+    @CrossOrigin
+    @PostMapping("/getDocumentsStatus")
+    ResponseEntity<?> returnDocument(@RequestParam(name="clientID") String id) {
+        StatusDocAnswer statusDocAnswer = clientService.getStatusClientDocuments(id);
+        if(statusDocAnswer != null){
+            LOGGER.info("Client status received with id = '" + id + "'  ==> " + statusDocAnswer.toString());
+            return ResponseEntity.status(HttpStatus.OK).body(statusDocAnswer);
+        }
+        else {
+            LOGGER.error("A request for the status of the filled documents has been fulfilled. There is no such client with ID = " + id);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such client with ID = " + id);
+        }
+    }
+
+
+
     @CrossOrigin
     @GetMapping("/getFamily")
     ResponseEntity<?> getFamily(){
@@ -219,53 +243,6 @@ public class ClientController {
         return ResponseEntity.status(HttpStatus.OK).body(foundClients);
     }
 
-    @CrossOrigin
-    @GetMapping("/returnCustomizedPDFTemplate")
-    ResponseEntity<?> returnImageTemplate(@RequestParam(name="clientID", required=true) String clientID,
-                                          @RequestParam(name="clientContract", required=false) String clientContract,
-                                          @RequestParam(name="clientAgreement", required=false) String clientAgreement,
-                                          @RequestParam(name="clientQuestionnaire", required=false) String clientQuestionnaire) {
-
-        byte[] pdfTemplate = null;
-        try {
-            if(clientContract != null) {
-                pdfTemplate = clientService.restoreContract_fromDB(clientID);
-            }
-//            else if (clientAgreement != null){
-//                clientService.restoreAgreement_fromDB(clientID);
-//            }
-//            else if (clientQuestionnaire != null){
-//                clientService.restoreQuestionnaire_fromDB(clientID);
-//            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error("The error has occurred ==> " + e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("PDF document template not received");
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(pdfTemplate);
-
-    }
-
-
-    @CrossOrigin
-    @PatchMapping("/setUpDocsForClient")
-    ResponseEntity<?> setDocs(@RequestParam(name="clientID", required=true) String clientID,
-                              @RequestParam(name="clientFoto", required=false) MultipartFile clientFoto,
-                              @RequestParam(name="clientContract", required=false) MultipartFile contract,
-                              @RequestParam(name="clientAgreement", required=false) MultipartFile agreement,
-                              @RequestParam(name="clientQuestionnaire", required=false) MultipartFile questionnaire) {
-
-        ClientDocsDTO clientDocsDTO = null;
-        try {
-            clientDocsDTO = clientService.setUpClientData(clientID, clientFoto,
-                    contract, agreement, questionnaire);
-        } catch (IOException ioe) {
-            log.error("Image file read error ==> " + ioe.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Image file read error ==> " + ioe.getMessage());
-        }
-        log.info("Documents added to the ClientDocs repository: " + clientDocsDTO.toString());
-        return ResponseEntity.status(HttpStatus.CREATED).body(clientDocsDTO);
-    }
 
 
     @CrossOrigin

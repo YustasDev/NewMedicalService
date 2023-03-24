@@ -864,6 +864,35 @@ public class ClientService {
     }
 
 
+    public StatusDocAnswer getStatusClientDocuments(String id) {
+        Optional<Client> clientOptional = clientRepository.findById(id);
+        if (clientOptional.isPresent()) {
+            String clientPassportNumber = clientOptional.get().getPassportNumber();
+            Optional<ClientDocs> clientDocsOpt = clientDocsRepository.findByPassportNumber(clientPassportNumber);
+            ClientDocs clientDocs = clientDocsOpt.get();
+
+            StatusDocAnswer statusDocAnswer = new StatusDocAnswer();
+            if(clientDocs.getContract() != null){
+                statusDocAnswer.setContract(true);
+            }
+            if(clientDocs.getAgreement() != null){
+                statusDocAnswer.setAgreement(true);
+            }
+            if(clientDocs.getQuestionnaire() != null){
+                statusDocAnswer.setQuestionnaire(true);
+            }
+            if(clientDocs.getClientFoto() != null){
+                statusDocAnswer.setFoto(true);
+            }
+            return statusDocAnswer;
+        }
+        else {
+            return null;
+        }
+    }
+
+
+
 
 
 
