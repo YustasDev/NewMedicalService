@@ -323,7 +323,7 @@ public class ClientService {
 
     public Client redactClientData(String clientPassportNumber, String clientKxNumber, String clientFirstName,
                                    String clientLastName, String clientSurName, String clientEmail, String clientTelephon,
-                                   String clientServiceDescription, String clientFamilyID, LocalDateTime clientStartPaymentDate,
+                                   String clientServiceDescription, String clientFamilyID, String clientAddress, LocalDateTime clientStartPaymentDate,
                                    LocalDateTime clientStartServiceDate, Boolean clientBlocked,
                                    String clientBlockedReasonDescription, LocalDateTime clientBlockDate,
                                    String clientID_Doctor) {
@@ -351,6 +351,9 @@ public class ClientService {
             }
             if (clientTelephon != null) {
                 client.setTelephone(clientTelephon);
+            }
+            if(clientAddress != null){
+                client.setAddress(clientAddress);
             }
             if (clientServiceDescription != null) {
                 client.setServiceDescription(clientServiceDescription);
@@ -425,6 +428,7 @@ public class ClientService {
         }
         clientDTO.setTelephone(client.getTelephone());
         clientDTO.setEmail(client.getEmail());
+        clientDTO.setAddress(client.getAddress());
         clientDTO.setStartPaymentDate(client.getStartPaymentDate());
         clientDTO.setStartServiceDate(client.getStartServiceDate());
         clientDTO.setServiceDescription(client.getServiceDescription());

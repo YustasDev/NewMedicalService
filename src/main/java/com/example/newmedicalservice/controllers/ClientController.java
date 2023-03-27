@@ -67,6 +67,7 @@ public class ClientController {
 //    ResponseEntity<?> returnDocument(@RequestParam(name="clientID", required=true) String id,
 //                                     @RequestParam(name="documentType", required=true) String document) {
 //
+//
 //    }
 
     @CrossOrigin
@@ -142,6 +143,8 @@ public class ClientController {
             System.err.println("The client e-mail is not valid");
             LOGGER.error(marker, "The client e-mail given is invalid: " + clientEmail);
         }
+
+        newClient.setAddress(clientDTO.getAddress());
 
         Doctor doctor = null;
         if(clientDTO.getDoctorID() != null) {
@@ -254,6 +257,7 @@ public class ClientController {
                                        @RequestParam(name="clientSurname", required=false) String clientSurname,
                                        @RequestParam(name="clientEmail", required=false) String clientEmail,
                                        @RequestParam(name="clientTelefon", required=false) String clientTelefon,
+                                       @RequestParam(name="clientAddress", required=false) String clientAddress,
                                        @RequestParam(name="clientServiceDescription", required=false) String clientServiceDescription,
                                        @RequestParam(name="clientFamilyID", required=false) String clientFamilyID,
                                        @RequestParam(name="clientStartPaymentDate", required=false) String clientStartPaymentDateStr,
@@ -281,7 +285,7 @@ public class ClientController {
         }
 
         Client clientAfterRedact = clientService.redactClientData(clientPassportNumber, kxNumber, clientFirstName, clientLastName, clientSurname,
-                clientEmail, clientTelefon, clientServiceDescription, clientFamilyID, clientStartPaymentDate,
+                clientEmail, clientTelefon, clientAddress, clientServiceDescription, clientFamilyID, clientStartPaymentDate,
                 clientStartServiceDate, clientBlocked, clientBlockedReasonDescription, clientBlockDate, clientID_Doctor);
 
         if(clientAfterRedact != null) {

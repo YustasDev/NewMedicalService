@@ -27,6 +27,7 @@ public class ClientDTO {
     private Integer doctorID;
     private String telephone;
     private String email;
+    private String address;
     //    @ManyToOne(cascade = CascadeType.MERGE)
 //    @JoinColumn(name="paymentPlan_id")
 //    private PaymentPlan paymentPlan;

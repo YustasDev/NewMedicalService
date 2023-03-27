@@ -59,6 +59,9 @@ public class Client implements Serializable {
     @Column(name = "email")
     private String email;
 
+    @Column(name = "address")
+    private String address;
+
 //    @ManyToOne(cascade = CascadeType.MERGE)
 //    @JoinColumn(name="paymentPlan_id")
 //    private PaymentPlan paymentPlan;
