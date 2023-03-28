@@ -62,13 +62,32 @@ public class ClientController {
     }
 
 
-//    @CrossOrigin
-//    @PostMapping("/getDocument")
-//    ResponseEntity<?> returnDocument(@RequestParam(name="clientID", required=true) String id,
-//                                     @RequestParam(name="documentType", required=true) String document) {
-//
-//
-//    }
+    @CrossOrigin
+    @PostMapping("/getDocument")
+    ResponseEntity<?> returnDocument(@RequestParam(name="clientID", required=true) String id,
+                                     @RequestParam(name="documentType", required=true) String document) {
+
+            byte[] pdfForSignature = null;
+            try {
+                if(document.equals("Contract")) {
+                    pdfForSignature = clientService.getCustomizedContract(id);
+                }
+//            else if (clientAgreement != null){
+//                clientService.restoreAgreement_fromDB(clientID);
+//            }
+//            else if (clientQuestionnaire != null){
+//                clientService.restoreQuestionnaire_fromDB(clientID);
+//            }
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error("The error has occurred ==> " + e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("PDF document template not received");
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(pdfForSignature);
+
+        }
+
+
 
     @CrossOrigin
     @PostMapping("/getDocumentsStatus")

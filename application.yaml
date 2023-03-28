@@ -53,21 +53,16 @@ spring:
   main:
     allow-circular-references: true
 
-password:
-  admin: ENC(KUCduDnnmvIqdubpvFZakg==)
-  user1: ENC(jz7kJLDKuNMQke2hDmjCEw==)
-  user2: ENC(r8EDqFIvFAb0XQU73YnAtw==)
-
 
 templates:
-  contract: /home/progforce/Temp/templateContract.pdf
-  agreement: /home/progforce/Temp/templateAgreement.pdf
-  questionnaire: /home/progforce/Temp/templateQuestionnaire.pdf
+  contract: /home/progforce/Temp/MedicalService/1/templateContract.pdf
+  agreement: /home/progforce/Temp/MedicalService/1/templateAgreement.pdf
+  questionnaire: /home/progforce/Temp/MedicalService/1/templateQuestionnaire.pdf
 
 mail:
   enabled: true
   from: vitaly.gusev@progforce.com
-  preLink: http://localhost:8080/displayDocumentsTemplates/
+  preLink: http://localhost:3000/documents/
   subject: כשלון בריצת ממשק מניפה ארכיב
 
 

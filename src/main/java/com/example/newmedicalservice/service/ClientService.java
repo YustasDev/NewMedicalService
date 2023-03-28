@@ -11,7 +11,6 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.canvas.parser.listener.IPdfTextLocation;
 import com.itextpdf.layout.Canvas;
-import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.pdfcleanup.PdfCleaner;
 import com.itextpdf.pdfcleanup.autosweep.CompositeCleanupStrategy;
@@ -21,6 +20,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,10 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -87,39 +86,37 @@ public class ClientService {
     private String clientQuestionnaire;
 
 
-    public boolean fillImageDocumentTemplates() {
-        boolean result = Boolean.parseBoolean(null);
-        ImageTemplatesClientDocuments imageTemplatesClientDocuments = new ImageTemplatesClientDocuments();
-        imageTemplatesClientDocuments.setTemplateContract(pdfFieldToByte(clientContract));
-        imageTemplatesClientDocuments.setTemplateAgreement(pdfFieldToByte(clientAgreement));
-        imageTemplatesClientDocuments.setTemplateQuestionnaire(pdfFieldToByte(clientQuestionnaire));
-        imageTemplatesClientDocuments.setTemplateClientFoto(null);
-        imageTemplatesRepositories.save(imageTemplatesClientDocuments);
-
-        ImageTemplatesClientDocuments imageTemplatesClientDocuments1 = imageTemplatesRepositories.getReferenceById(1L);
-        if (imageTemplatesClientDocuments1 != null) {
-            result = true;
-        } else {
-            result = false;
-        }
-        return result;
-    }
-
-    public byte[] pdfFieldToByte(String pathToPDF) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        PdfWriter writer = new PdfWriter(byteArrayOutputStream);
-        PdfReader reader = null;
-        try {
-            reader = new PdfReader(pathToPDF);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        PdfDocument pdfDocument = new PdfDocument(reader, writer);
-        Document document = new Document(pdfDocument);
-        document.close();
-        byte[] pdfDocToByte = byteArrayOutputStream.toByteArray();
-        return pdfDocToByte;
-    }
+//    public boolean fillImageDocumentTemplates() {
+//        boolean result = Boolean.parseBoolean(null);
+//        ImageTemplatesClientDocuments imageTemplatesClientDocuments = new ImageTemplatesClientDocuments();
+//        imageTemplatesClientDocuments.setTemplateContract(pdfFieldToByte(clientContract));
+//        imageTemplatesClientDocuments.setTemplateAgreement(pdfFieldToByte(clientAgreement));
+//        imageTemplatesClientDocuments.setTemplateQuestionnaire(pdfFieldToByte(clientQuestionnaire));
+//        imageTemplatesClientDocuments.setTemplateClientFoto(null);
+//        imageTemplatesRepositories.save(imageTemplatesClientDocuments);
+//
+//        ImageTemplatesClientDocuments imageTemplatesClientDocuments1 = imageTemplatesRepositories.getReferenceById(1L);
+//        if (imageTemplatesClientDocuments1 != null) {
+//            result = true;
+//        }
+//        return result;
+//    }
+//
+//    public byte[] pdfFieldToByte(String pathToPDF) {
+//        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//        PdfWriter writer = new PdfWriter(byteArrayOutputStream);
+//        PdfReader reader = null;
+//        try {
+//            reader = new PdfReader(pathToPDF);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        PdfDocument pdfDocument = new PdfDocument(reader, writer);
+//        Document document = new Document(pdfDocument);
+//        document.close();
+//        byte[] pdfDocToByte = byteArrayOutputStream.toByteArray();
+//        return pdfDocToByte;
+//    }
 
 
     public ClientDocsDTO setUpClientData(String clientID,
@@ -249,6 +246,7 @@ public class ClientService {
         return familyDTOList;
     }
 
+//====================   pdf processing - first option   =======================================>
 
     public byte[] restoreContract_fromDB(String clientID) throws IOException {
         ImageTemplatesClientDocuments imageClientDocuments = imageTemplatesRepositories.getReferenceById(1L);
@@ -259,6 +257,8 @@ public class ClientService {
         out.close();
 
         String destinationFile = replaceNameContentFromPDF(sourceFile, clientID);
+        //String fileAfterInsertName = replaceNameContentFromPDF(sourceFile, clientID);
+        //String fileAfterInsertPassportNumber = replacePassportNumberContentFromPDF(fileAfterInsertName, clientID);
         String finalTemplateContract = replacePassportNumberContentFromPDF(destinationFile, clientID);
 
         Path pdfPath = Paths.get(finalTemplateContract);
@@ -287,7 +287,7 @@ public class ClientService {
 
     private String replaceNameContentFromPDF(String sourceFile, String clientID) {
         String destinationFile = "client" + clientID + "_" + sourceFile;
-        String searchText = "МЕМОРИАЛЬНЫЙ ОРДЕР";
+        String searchText = "[clientName]";
         Client client = clientRepository.getReferenceById(clientID);
         String firstName = client.getFirstName();
         String lastName = client.getLastName();
@@ -320,6 +320,7 @@ public class ClientService {
         }
     }
 
+    //====================   pdf processing - first option - end   =======================================<
 
     public Client redactClientData(String clientPassportNumber, String clientKxNumber, String clientFirstName,
                                    String clientLastName, String clientSurName, String clientEmail, String clientTelephon,
@@ -895,10 +896,32 @@ public class ClientService {
         }
     }
 
+    //====================   pdf processing - second option   =======================================>
 
 
+    public byte[] getCustomizedContract(String id) {
 
+        Client client = clientRepository.getReferenceById(id);
+        String firstName = client.getFirstName();
+        String lastName = client.getLastName();
+        String surname = client.getSurName();
+        String insertName = firstName + " " + lastName + " " + surname;
+        String insertPassportNumber = client.getPassportNumber();
 
+        try {
+            PDDocument pDDocument = PDDocument.load(new File("templateContractClient.pdf"));
+            PDAcroForm pDAcroForm = pDDocument.getDocumentCatalog().getAcroForm();
+            PDField field = pDAcroForm.getField("Name");
+            field.setValue(insertName);
+            field = pDAcroForm.getField("passportNumber");
+            field.setValue(insertPassportNumber);
+            pDDocument.save("output.pdf");
+            pDDocument.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 
 
