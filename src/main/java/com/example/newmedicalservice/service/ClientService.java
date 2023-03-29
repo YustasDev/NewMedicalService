@@ -11,6 +11,7 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.canvas.parser.listener.IPdfTextLocation;
 import com.itextpdf.layout.Canvas;
+import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.pdfcleanup.PdfCleaner;
 import com.itextpdf.pdfcleanup.autosweep.CompositeCleanupStrategy;
@@ -247,78 +248,78 @@ public class ClientService {
     }
 
 //====================   pdf processing - first option   =======================================>
-
-    public byte[] restoreContract_fromDB(String clientID) throws IOException {
-        ImageTemplatesClientDocuments imageClientDocuments = imageTemplatesRepositories.getReferenceById(1L);
-        byte[] contractByte = imageClientDocuments.getTemplateContract();
-        String sourceFile = "templateClientContract.pdf";
-        OutputStream out = new FileOutputStream(sourceFile);
-        out.write(contractByte);
-        out.close();
-
-        String destinationFile = replaceNameContentFromPDF(sourceFile, clientID);
-        //String fileAfterInsertName = replaceNameContentFromPDF(sourceFile, clientID);
-        //String fileAfterInsertPassportNumber = replacePassportNumberContentFromPDF(fileAfterInsertName, clientID);
-        String finalTemplateContract = replacePassportNumberContentFromPDF(destinationFile, clientID);
-
-        Path pdfPath = Paths.get(finalTemplateContract);
-        byte[] customizedContractByte = Files.readAllBytes(pdfPath);
-        return customizedContractByte;
-    }
-
-    private String replacePassportNumberContentFromPDF(String sourceFile, String clientID) {
-        String destinationFile = "finalTemplateClientContract.pdf";
-        String searchText = "Получатель";
-        Client client = clientRepository.getReferenceById(clientID);
-        String insertText = clientRepository.getReferenceById(clientID).getPassportNumber();
-        PdfDocument pdfDocument = null;
-        try {
-            PdfReader reader = new PdfReader(sourceFile);
-            PdfWriter writer = new PdfWriter(destinationFile);
-            pdfDocument = new PdfDocument(reader, writer);
-            replaceTextContentFromDocument(pdfDocument, searchText, insertText);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            log.error("The error has occurred ==> " + ioe);
-        }
-        pdfDocument.close();
-        return destinationFile;
-    }
-
-    private String replaceNameContentFromPDF(String sourceFile, String clientID) {
-        String destinationFile = "client" + clientID + "_" + sourceFile;
-        String searchText = "[clientName]";
-        Client client = clientRepository.getReferenceById(clientID);
-        String firstName = client.getFirstName();
-        String lastName = client.getLastName();
-        String surname = client.getSurName();
-        String insertText = firstName + " " + lastName + " " + surname;
-        PdfDocument pdfDocument = null;
-        try {
-            PdfReader reader = new PdfReader(sourceFile);
-            PdfWriter writer = new PdfWriter(destinationFile);
-            pdfDocument = new PdfDocument(reader, writer);
-            replaceTextContentFromDocument(pdfDocument, searchText, insertText);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            log.error("The error has occurred ==> " + ioe);
-        }
-        pdfDocument.close();
-        return destinationFile;
-    }
-
-    private void replaceTextContentFromDocument(PdfDocument pdfDocument, String searchText, String insertText) throws IOException {
-        CompositeCleanupStrategy strategy = new CompositeCleanupStrategy();
-        strategy.add(new RegexBasedCleanupStrategy(searchText).setRedactionColor(ColorConstants.WHITE));
-        PdfCleaner.autoSweepCleanUp(pdfDocument, strategy);
-
-        for (IPdfTextLocation location : strategy.getResultantLocations()) {
-            PdfPage page = pdfDocument.getPage(location.getPageNumber() + 1);
-            PdfCanvas pdfCanvas = new PdfCanvas(page.newContentStreamAfter(), page.getResources(), page.getDocument());
-            Canvas canvas = new Canvas(pdfCanvas, location.getRectangle());
-            canvas.add(new Paragraph(insertText).setFontSize(9).setMarginTop(0f));
-        }
-    }
+//
+//    public byte[] restoreContract_fromDB(String clientID) throws IOException {
+//        ImageTemplatesClientDocuments imageClientDocuments = imageTemplatesRepositories.getReferenceById(1L);
+//        byte[] contractByte = imageClientDocuments.getTemplateContract();
+//        String sourceFile = "templateClientContract.pdf";
+//        OutputStream out = new FileOutputStream(sourceFile);
+//        out.write(contractByte);
+//        out.close();
+//
+//        String destinationFile = replaceNameContentFromPDF(sourceFile, clientID);
+//        //String fileAfterInsertName = replaceNameContentFromPDF(sourceFile, clientID);
+//        //String fileAfterInsertPassportNumber = replacePassportNumberContentFromPDF(fileAfterInsertName, clientID);
+//        String finalTemplateContract = replacePassportNumberContentFromPDF(destinationFile, clientID);
+//
+//        Path pdfPath = Paths.get(finalTemplateContract);
+//        byte[] customizedContractByte = Files.readAllBytes(pdfPath);
+//        return customizedContractByte;
+//    }
+//
+//    private String replacePassportNumberContentFromPDF(String sourceFile, String clientID) {
+//        String destinationFile = "finalTemplateClientContract.pdf";
+//        String searchText = "Получатель";
+//        Client client = clientRepository.getReferenceById(clientID);
+//        String insertText = clientRepository.getReferenceById(clientID).getPassportNumber();
+//        PdfDocument pdfDocument = null;
+//        try {
+//            PdfReader reader = new PdfReader(sourceFile);
+//            PdfWriter writer = new PdfWriter(destinationFile);
+//            pdfDocument = new PdfDocument(reader, writer);
+//            replaceTextContentFromDocument(pdfDocument, searchText, insertText);
+//        } catch (IOException ioe) {
+//            ioe.printStackTrace();
+//            log.error("The error has occurred ==> " + ioe);
+//        }
+//        pdfDocument.close();
+//        return destinationFile;
+//    }
+//
+//    private String replaceNameContentFromPDF(String sourceFile, String clientID) {
+//        String destinationFile = "client" + clientID + "_" + sourceFile;
+//        String searchText = "[clientName]";
+//        Client client = clientRepository.getReferenceById(clientID);
+//        String firstName = client.getFirstName();
+//        String lastName = client.getLastName();
+//        String surname = client.getSurName();
+//        String insertText = firstName + " " + lastName + " " + surname;
+//        PdfDocument pdfDocument = null;
+//        try {
+//            PdfReader reader = new PdfReader(sourceFile);
+//            PdfWriter writer = new PdfWriter(destinationFile);
+//            pdfDocument = new PdfDocument(reader, writer);
+//            replaceTextContentFromDocument(pdfDocument, searchText, insertText);
+//        } catch (IOException ioe) {
+//            ioe.printStackTrace();
+//            log.error("The error has occurred ==> " + ioe);
+//        }
+//        pdfDocument.close();
+//        return destinationFile;
+//    }
+//
+//    private void replaceTextContentFromDocument(PdfDocument pdfDocument, String searchText, String insertText) throws IOException {
+//        CompositeCleanupStrategy strategy = new CompositeCleanupStrategy();
+//        strategy.add(new RegexBasedCleanupStrategy(searchText).setRedactionColor(ColorConstants.WHITE));
+//        PdfCleaner.autoSweepCleanUp(pdfDocument, strategy);
+//
+//        for (IPdfTextLocation location : strategy.getResultantLocations()) {
+//            PdfPage page = pdfDocument.getPage(location.getPageNumber() + 1);
+//            PdfCanvas pdfCanvas = new PdfCanvas(page.newContentStreamAfter(), page.getResources(), page.getDocument());
+//            Canvas canvas = new Canvas(pdfCanvas, location.getRectangle());
+//            canvas.add(new Paragraph(insertText).setFontSize(9).setMarginTop(0f));
+//        }
+//    }
 
     //====================   pdf processing - first option - end   =======================================<
 
@@ -897,8 +898,6 @@ public class ClientService {
     }
 
     //====================   pdf processing - second option   =======================================>
-
-
     public byte[] getCustomizedContract(String id) {
 
         Client client = clientRepository.getReferenceById(id);
@@ -907,20 +906,45 @@ public class ClientService {
         String surname = client.getSurName();
         String insertName = firstName + " " + lastName + " " + surname;
         String insertPassportNumber = client.getPassportNumber();
-
         try {
-            PDDocument pDDocument = PDDocument.load(new File("templateContractClient.pdf"));
+            PDDocument pDDocument = PDDocument.load(new File("templateContract.pdf"));
             PDAcroForm pDAcroForm = pDDocument.getDocumentCatalog().getAcroForm();
-            PDField field = pDAcroForm.getField("Name");
+            PDField field = pDAcroForm.getField("name");
             field.setValue(insertName);
             field = pDAcroForm.getField("passportNumber");
             field.setValue(insertPassportNumber);
-            pDDocument.save("output.pdf");
+            field = pDAcroForm.getField("address");
+            field.setValue(client.getAddress());
+            field = pDAcroForm.getField("phone");
+            field.setValue(client.getTelephone());
+            field = pDAcroForm.getField("email");
+            field.setValue(client.getEmail());
+            pDDocument.save("templateContractClient.pdf");
             pDDocument.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(byteArrayOutputStream);
+        PdfReader reader = null;
+        try {
+            reader = new PdfReader("templateContractClient.pdf");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        PdfDocument pdfDocument = new PdfDocument(reader, writer);
+        Document document = new Document(pdfDocument);
+        document.close();
+        byte[] pdfDocToByte = byteArrayOutputStream.toByteArray();
+
+        // TODO   записать массив байтов в БД и стереть файл
+
+
+
+
+
+
+        return pdfDocToByte;
     }
 
 

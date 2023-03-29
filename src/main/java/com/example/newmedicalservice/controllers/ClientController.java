@@ -84,7 +84,6 @@ public class ClientController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("PDF document template not received");
             }
             return ResponseEntity.status(HttpStatus.OK).body(pdfForSignature);
-
         }
 
 
