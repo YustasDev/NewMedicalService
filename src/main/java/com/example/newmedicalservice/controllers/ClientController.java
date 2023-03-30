@@ -72,9 +72,9 @@ public class ClientController {
                 if(document.equals("Contract")) {
                     pdfForSignature = clientService.getCustomizedContract(id);
                 }
-//            else if (clientAgreement != null){
-//                clientService.restoreAgreement_fromDB(clientID);
-//            }
+            else if (document.equals("Agreement")){
+                    pdfForSignature = clientService.getCustomizedAgreement(id);
+            }
 //            else if (clientQuestionnaire != null){
 //                clientService.restoreQuestionnaire_fromDB(clientID);
 //            }

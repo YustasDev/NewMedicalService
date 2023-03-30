@@ -17,6 +17,7 @@ import com.itextpdf.pdfcleanup.PdfCleaner;
 import com.itextpdf.pdfcleanup.autosweep.CompositeCleanupStrategy;
 import com.itextpdf.pdfcleanup.autosweep.RegexBasedCleanupStrategy;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -923,6 +924,7 @@ public class ClientService {
             pDDocument.close();
         } catch (IOException e) {
             e.printStackTrace();
+            LOGGER.error("Error when creating 'templateContractClient.pdf' for the client: " + client.toString());
         }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(byteArrayOutputStream);
@@ -931,21 +933,92 @@ public class ClientService {
             reader = new PdfReader("templateContractClient.pdf");
         } catch (IOException e) {
             e.printStackTrace();
+            LOGGER.error("Error when reading the file: 'templateContractClient.pdf'");
         }
         PdfDocument pdfDocument = new PdfDocument(reader, writer);
         Document document = new Document(pdfDocument);
         document.close();
         byte[] pdfDocToByte = byteArrayOutputStream.toByteArray();
 
-        // TODO   записать массив байтов в БД и стереть файл
-
-
-
-
-
-
+        // TODO   write an array of bytes to the database and erase the file
+        ClientDocs clientDocs = null;
+        Long idClientDocs = client.getClientDocs().getId();
+        Optional<ClientDocs> clientDocsOptional = clientDocsRepository.findById(idClientDocs);
+        if (clientDocsOptional.isPresent()) {
+            clientDocs = clientDocsOptional.get();
+        }
+        clientDocs.setContract(pdfDocToByte);
+        try {
+            client.setClientDocs(clientDocs);
+            clientRepository.save(client);
+            FileUtils.deleteQuietly(new File("templateContractClient.pdf"));
+        }
+        catch (Exception e){
+            LOGGER.error("Error when saving an unsigned 'templateContractClient.pdf' to DB for the client: " + client.toString());
+        }
         return pdfDocToByte;
     }
+
+
+    public byte[] getCustomizedAgreement(String id) {
+        Client client = clientRepository.getReferenceById(id);
+        String firstName = client.getFirstName();
+        String lastName = client.getLastName();
+        String surname = client.getSurName();
+        String insertName = firstName + " " + lastName + " " + surname;
+        String insertPassportNumber = client.getPassportNumber();
+        String insertAddress = client.getAddress();
+
+        try {
+            PDDocument pDDocument = PDDocument.load(new File("templateAgreement.pdf"));
+            PDAcroForm pDAcroForm = pDDocument.getDocumentCatalog().getAcroForm();
+            PDField field = pDAcroForm.getField("name");
+            field.setValue(insertName);
+            field = pDAcroForm.getField("passportNumber");
+            field.setValue(insertPassportNumber);
+            field = pDAcroForm.getField("address");
+            field.setValue(client.getAddress());
+            pDDocument.save("templateAgreementClient.pdf");
+            pDDocument.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            LOGGER.error("Error when creating 'templateAgreementClient.pdf' for the client: " + client.toString());
+        }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(byteArrayOutputStream);
+        PdfReader reader = null;
+        try {
+            reader = new PdfReader("templateAgreementClient.pdf");
+        } catch (IOException e) {
+            e.printStackTrace();
+            LOGGER.error("Error when reading the file: 'templateAgreementClient.pdf'");
+        }
+        PdfDocument pdfDocument = new PdfDocument(reader, writer);
+        Document document = new Document(pdfDocument);
+        document.close();
+        byte[] pdfDocToByte = byteArrayOutputStream.toByteArray();
+
+        ClientDocs clientDocs = null;
+        Long idClientDocs = client.getClientDocs().getId();
+        Optional<ClientDocs> clientDocsOptional = clientDocsRepository.findById(idClientDocs);
+        if (clientDocsOptional.isPresent()) {
+            clientDocs = clientDocsOptional.get();
+        }
+        clientDocs.setAgreement(pdfDocToByte);
+        try {
+            client.setClientDocs(clientDocs);
+            clientRepository.save(client);
+            FileUtils.deleteQuietly(new File("templateAgreementClient.pdf"));
+        }
+        catch (Exception e){
+            LOGGER.error("Error when saving an unsigned 'templateAgreementClient.pdf' to DB for the client: " + client.toString());
+        }
+        return pdfDocToByte;
+    }
+
+
+
+
 
 
 
