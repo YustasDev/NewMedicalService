@@ -3,19 +3,10 @@ package com.example.newmedicalservice.service;
 import com.example.newmedicalservice.dto.*;
 import com.example.newmedicalservice.dtoForAnswers.*;
 import com.example.newmedicalservice.repository.*;
-import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
-import com.itextpdf.kernel.pdf.canvas.parser.listener.IPdfTextLocation;
-import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.pdfcleanup.PdfCleaner;
-import com.itextpdf.pdfcleanup.autosweep.CompositeCleanupStrategy;
-import com.itextpdf.pdfcleanup.autosweep.RegexBasedCleanupStrategy;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
@@ -23,6 +14,10 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +28,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -924,7 +922,7 @@ public class ClientService {
             pDDocument.close();
         } catch (IOException e) {
             e.printStackTrace();
-            LOGGER.error("Error when creating 'templateContractClient.pdf' for the client: " + client.toString());
+            LOGGER.error("Error when creating 'templateContractClient.pdf' for the client: " + client.getId());
         }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(byteArrayOutputStream);
@@ -954,7 +952,7 @@ public class ClientService {
             FileUtils.deleteQuietly(new File("templateContractClient.pdf"));
         }
         catch (Exception e){
-            LOGGER.error("Error when saving an unsigned 'templateContractClient.pdf' to DB for the client: " + client.toString());
+            LOGGER.error("Error when saving an unsigned 'templateContractClient.pdf' to DB for the client: " + client.getId());
         }
         return pdfDocToByte;
     }
@@ -982,7 +980,7 @@ public class ClientService {
             pDDocument.close();
         } catch (IOException e) {
             e.printStackTrace();
-            LOGGER.error("Error when creating 'templateAgreementClient.pdf' for the client: " + client.toString());
+            LOGGER.error("Error when creating 'templateAgreementClient.pdf' for the client: " + client.getId());
         }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(byteArrayOutputStream);
@@ -1011,11 +1009,151 @@ public class ClientService {
             FileUtils.deleteQuietly(new File("templateAgreementClient.pdf"));
         }
         catch (Exception e){
-            LOGGER.error("Error when saving an unsigned 'templateAgreementClient.pdf' to DB for the client: " + client.toString());
+            LOGGER.error("Error when saving an unsigned 'templateAgreementClient.pdf' to DB for the client: " + client.getId());
         }
         return pdfDocToByte;
     }
 
+
+    public ClientDocsDTO updateClientDocs(String clientID, String docType, MultipartFile signature) {
+        String pdfContractFile = null;
+        ClientDocsDTO clientDocsDTO = new ClientDocsDTO();
+        byte[] signatureByte = null;
+        String restoreSignature = null;
+        String signedContract = "signedContract.pdf";
+        try {
+            signatureByte = signature.getBytes();
+            restoreSignature = "restoreSignature.png";
+            OutputStream out = new FileOutputStream(restoreSignature);
+            out.write(signatureByte);
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+  //=============================== resize signature ================================>
+        File fileToRead = new File(restoreSignature);
+        BufferedImage bufferedImageInput = null;
+        int resizeWidth = 120;
+        int resizeHeight = 64;
+        String imagePathToWrite = "resizeSignature.png";
+        try {
+            bufferedImageInput = ImageIO.read(fileToRead);
+            BufferedImage bufferedImageOutput = new BufferedImage(resizeWidth, resizeHeight, bufferedImageInput.getType());
+
+            Graphics2D g2d = bufferedImageOutput.createGraphics();
+            g2d.drawImage(bufferedImageInput, 0, 0, resizeWidth, resizeHeight, null);
+            g2d.dispose();
+
+            String formatName = imagePathToWrite.substring(imagePathToWrite
+                    .lastIndexOf(".") + 1);
+
+            ImageIO.write(bufferedImageOutput, formatName, new File(imagePathToWrite));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+  // ==================================================================================<
+
+        if(docType.equals("Contract")){
+            try {
+                pdfContractFile = restoreContract_fromDB(clientID);
+            } catch (IOException e) {
+                e.printStackTrace();
+                LOGGER.error("Error reading 'Contract' from 'ClientDocs' for client: " + clientID);
+            }
+            try {
+                if(pdfContractFile != null) {
+                    PDDocument doc = PDDocument.load(new File(pdfContractFile));
+                    PDPage page = doc.getPage(5);
+                    PDImageXObject pdImage = PDImageXObject.createFromFile(imagePathToWrite,doc);
+                    PDPageContentStream contents = new PDPageContentStream(doc, page, true, true);
+                    contents.drawImage(pdImage, 350, 550);
+                    contents.close();
+                    doc.save(signedContract);
+                    doc.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+//=======================================================================================================>
+// TODO   write an array of bytes to the database and erase the file
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            PdfWriter writer = new PdfWriter(byteArrayOutputStream);
+            PdfReader reader = null;
+            try {
+                reader = new PdfReader(signedContract);
+            } catch (IOException e) {
+                e.printStackTrace();
+                LOGGER.error("Error when reading the file: 'templateContractClient.pdf'");
+            }
+            PdfDocument pdfDocument = new PdfDocument(reader, writer);
+            Document document = new Document(pdfDocument);
+            document.close();
+            byte[] pdfDocToByte = byteArrayOutputStream.toByteArray();
+            ClientDocs clientDocs = null;
+            Optional<Client> clientOpt = clientRepository.findById(clientID);
+            if(clientOpt.isPresent()) {
+                Client client = clientOpt.get();
+                Long idClientDocs = client.getClientDocs().getId();
+                Optional<ClientDocs> clientDocsOptional = clientDocsRepository.findById(idClientDocs);
+                if (clientDocsOptional.isPresent()) {
+                    clientDocs = clientDocsOptional.get();
+                }
+                clientDocs.setContract(pdfDocToByte);
+                try {
+                    client.setClientDocs(clientDocs);
+                    clientRepository.save(client);
+                    FileUtils.deleteQuietly(new File(restoreSignature));
+                    FileUtils.deleteQuietly(new File(imagePathToWrite));
+                    FileUtils.deleteQuietly(new File(signedContract));
+                    FileUtils.deleteQuietly(new File(pdfContractFile));
+                } catch (Exception e) {
+                    LOGGER.error("Error when saving an unsigned 'templateContractClient.pdf' to DB for the client: " + client.getId());
+                }
+            }
+//=======================================================================================================<
+
+
+
+
+
+
+
+        }
+
+        if(docType.equals("Agreement")){
+
+
+        }
+
+
+        return clientDocsDTO;
+    }
+
+
+
+
+    public String restoreContract_fromDB(String clientID) throws IOException {
+        Client client = null;
+        ClientDocs clientDocs = null;
+        String restoredContractFile = null;
+        Optional<Client> clientOpt = clientRepository.findById(clientID);
+        if(clientOpt.isPresent()){
+            client = clientOpt.get();
+            Long idClientDocs = client.getClientDocs().getId();
+            Optional<ClientDocs> clientDocsOptional = clientDocsRepository.findById(idClientDocs);
+            if (clientDocsOptional.isPresent()) {
+                clientDocs = clientDocsOptional.get();
+                byte[] contractByte = clientDocs.getContract();
+                restoredContractFile = "templateClientContract.pdf";
+                OutputStream out = new FileOutputStream(restoredContractFile);
+                out.write(contractByte);
+                out.close();
+        }
+      }
+        return restoredContractFile;
+    }
 
 
 

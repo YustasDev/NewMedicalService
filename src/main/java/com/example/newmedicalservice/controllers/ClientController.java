@@ -62,6 +62,28 @@ public class ClientController {
     }
 
 
+
+    @CrossOrigin
+    @PatchMapping("/updateClientDocs")
+    ResponseEntity<?> updateDocs(@RequestParam(name="clientID", required=true) String clientID,
+                                 @RequestParam(name="docType", required = true) String docType,
+                                 @RequestParam(name="signature", required=true) MultipartFile signature) {
+
+        ClientDocsDTO clientDocsDTO = null;
+        try {
+            clientDocsDTO = clientService.updateClientDocs(clientID, docType, signature);
+        } catch (Exception ioe) {
+            LOGGER.error("Image file read error ==> " + ioe.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Image file read error ==> " + ioe.getMessage());
+        }
+
+            return null;
+
+    }
+
+
+
+
     @CrossOrigin
     @PostMapping("/getDocument")
     ResponseEntity<?> returnDocument(@RequestParam(name="clientID", required=true) String id,
