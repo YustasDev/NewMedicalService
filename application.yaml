@@ -62,7 +62,7 @@ templates:
 mail:
   enabled: true
   from: vitaly.gusev@progforce.com
-  preLink: http://localhost:3000/documents/
+  preLink: http://localhost:3000/documents?clientId=
   subject: כשלון בריצת ממשק מניפה ארכיב
 
 

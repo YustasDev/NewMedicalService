@@ -62,67 +62,70 @@ public class ClientController {
     }
 
 
-
-    @CrossOrigin
-    @PatchMapping("/updateClientDocs")
-    ResponseEntity<?> updateDocs(@RequestParam(name="clientID", required=true) String clientID,
-                                 @RequestParam(name="docType", required = true) String docType,
-                                 @RequestParam(name="signature", required=true) MultipartFile signature) {
-
-        ClientDocsDTO clientDocsDTO = null;
-        try {
-            clientDocsDTO = clientService.updateClientDocs(clientID, docType, signature);
-        } catch (Exception ioe) {
-            LOGGER.error("Image file read error ==> " + ioe.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Image file read error ==> " + ioe.getMessage());
-        }
-
-            return null;
-
-    }
-
-
-
-
-    @CrossOrigin
-    @PostMapping("/getDocument")
-    ResponseEntity<?> returnDocument(@RequestParam(name="clientID", required=true) String id,
-                                     @RequestParam(name="documentType", required=true) String document) {
-
-            byte[] pdfForSignature = null;
-            try {
-                if(document.equals("Contract")) {
-                    pdfForSignature = clientService.getCustomizedContract(id);
-                }
-            else if (document.equals("Agreement")){
-                    pdfForSignature = clientService.getCustomizedAgreement(id);
-            }
-//            else if (clientQuestionnaire != null){
-//                clientService.restoreQuestionnaire_fromDB(clientID);
+//
+//    @CrossOrigin
+//    @PatchMapping("/updateClientDocs")
+//    ResponseEntity<?> updateDocs(@RequestParam(name="clientID", required=true) String clientID,
+//                                 @RequestParam(name="docType", required = true) String docType,
+//                                 @RequestParam(name="signature", required=true) MultipartFile signature) {
+//
+//        ClientDocsDTO clientDocsDTO = null;
+//        try {
+//            Boolean result = clientService.updateClientDocs(clientID, docType, signature);
+//            if(result){
+//                return ResponseEntity.status(HttpStatus.OK).body("Success");
 //            }
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.error("The error has occurred ==> " + e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("PDF document template not received");
-            }
-            return ResponseEntity.status(HttpStatus.OK).body(pdfForSignature);
-        }
+//            else {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed");
+//            }
+//        } catch (Exception ioe) {
+//            LOGGER.error("Image file read error ==> " + ioe.getMessage());
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Image file read error ==> " + ioe.getMessage());
+//        }
+//    }
 
 
 
-    @CrossOrigin
-    @PostMapping("/getDocumentsStatus")
-    ResponseEntity<?> returnDocument(@RequestParam(name="clientID") String id) {
-        StatusDocAnswer statusDocAnswer = clientService.getStatusClientDocuments(id);
-        if(statusDocAnswer != null){
-            LOGGER.info("Client status received with id = '" + id + "'  ==> " + statusDocAnswer.toString());
-            return ResponseEntity.status(HttpStatus.OK).body(statusDocAnswer);
-        }
-        else {
-            LOGGER.error("A request for the status of the filled documents has been fulfilled. There is no such client with ID = " + id);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such client with ID = " + id);
-        }
-    }
+
+//    @CrossOrigin
+//    @PostMapping("/getDocument")
+//    ResponseEntity<?> returnDocument(@RequestParam(name="clientID", required=true) String id,
+//                                     @RequestParam(name="documentType", required=true) String document) {
+//
+//            byte[] pdfForSignature = null;
+//            try {
+//                if(document.equals("Contract")) {
+//                    pdfForSignature = clientService.getCustomizedContract(id);
+//                }
+//            else if (document.equals("Agreement")){
+//                    pdfForSignature = clientService.getCustomizedAgreement(id);
+//            }
+////            else if (clientQuestionnaire != null){
+////                clientService.restoreQuestionnaire_fromDB(clientID);
+////            }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                log.error("The error has occurred ==> " + e);
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("PDF document template not received");
+//            }
+//            return ResponseEntity.status(HttpStatus.OK).body(pdfForSignature);
+//        }
+
+
+
+//    @CrossOrigin
+//    @PostMapping("/getDocumentsStatus")
+//    ResponseEntity<?> returnDocument(@RequestParam(name="clientID") String id) {
+//        StatusDocAnswer statusDocAnswer = clientService.getStatusClientDocuments(id);
+//        if(statusDocAnswer != null){
+//            LOGGER.info("Client status received with id = '" + id + "'  ==> " + statusDocAnswer.toString());
+//            return ResponseEntity.status(HttpStatus.OK).body(statusDocAnswer);
+//        }
+//        else {
+//            LOGGER.error("A request for the status of the filled documents has been fulfilled. There is no such client with ID = " + id);
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such client with ID = " + id);
+//        }
+//    }
 
 
 

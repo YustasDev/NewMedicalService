@@ -1,5 +1,7 @@
 package com.example.newmedicalservice.dto;
 
+import com.example.newmedicalservice.dtoForAnswers.QuestionnaireDTO;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,6 +43,11 @@ public class ClientDocs implements Serializable {
 //    @Column(name = "questionnaire", columnDefinition = "json")
 //    private String questionnaire;
 
+    // https://stackoverflow.com/questions/42875899/create-mysql-table-with-json-column-inside-spring-boot-hibernate-schema-valida
+    @Column(name = "questionnaire", columnDefinition = "json")
+    @ToString.Exclude
+    private String questionnaire;
+
 
     @Lob
     @Basic
@@ -48,17 +55,19 @@ public class ClientDocs implements Serializable {
     @ToString.Exclude
     private byte[] contract;
 
+    @Column(name = "contract_signature")
+    private Boolean contractSignature;
+
     @Lob
     @Basic
     @Column(name = "agreement")
     @ToString.Exclude
     private byte[] agreement;
 
-    @Lob
-    @Basic
-    @Column(name = "questionnaire")
-    @ToString.Exclude
-    private byte[] questionnaire;
+    @Column(name = "agreement_signature")
+    private Boolean agreementSignature;
+
+
 
     @Lob
     @Basic

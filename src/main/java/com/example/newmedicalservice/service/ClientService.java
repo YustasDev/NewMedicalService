@@ -3,6 +3,7 @@ package com.example.newmedicalservice.service;
 import com.example.newmedicalservice.dto.*;
 import com.example.newmedicalservice.dtoForAnswers.*;
 import com.example.newmedicalservice.repository.*;
+import com.google.gson.Gson;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
@@ -23,6 +24,8 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -146,9 +149,9 @@ public class ClientService {
             clientDocs.setAgreement(agreement.getBytes());
         }
 
-        if (questionnaire != null) {
-            clientDocs.setQuestionnaire(questionnaire.getBytes());
-        }
+//        if (questionnaire != null) {
+//            clientDocs.setQuestionnaire(questionnaire.getBytes());
+//        }
 
         client.setClientDocs(clientDocs);
         clientRepository.save(client);
@@ -324,7 +327,7 @@ public class ClientService {
 
     public Client redactClientData(String clientPassportNumber, String clientKxNumber, String clientFirstName,
                                    String clientLastName, String clientSurName, String clientEmail, String clientTelephon,
-                                   String clientServiceDescription, String clientFamilyID, String clientAddress, LocalDateTime clientStartPaymentDate,
+                                   String clientAddress, String clientServiceDescription, String clientFamilyID, LocalDateTime clientStartPaymentDate,
                                    LocalDateTime clientStartServiceDate, Boolean clientBlocked,
                                    String clientBlockedReasonDescription, LocalDateTime clientBlockDate,
                                    String clientID_Doctor) {
@@ -877,10 +880,10 @@ public class ClientService {
             ClientDocs clientDocs = clientDocsOpt.get();
 
             StatusDocAnswer statusDocAnswer = new StatusDocAnswer();
-            if(clientDocs.getContract() != null){
+            if(clientDocs.getContractSignature() != null && clientDocs.getContractSignature() == true){
                 statusDocAnswer.setContract(true);
             }
-            if(clientDocs.getAgreement() != null){
+            if(clientDocs.getAgreementSignature() != null && clientDocs.getAgreementSignature() == true){
                 statusDocAnswer.setAgreement(true);
             }
             if(clientDocs.getQuestionnaire() != null){
@@ -965,8 +968,6 @@ public class ClientService {
         String surname = client.getSurName();
         String insertName = firstName + " " + lastName + " " + surname;
         String insertPassportNumber = client.getPassportNumber();
-        String insertAddress = client.getAddress();
-
         try {
             PDDocument pDDocument = PDDocument.load(new File("templateAgreement.pdf"));
             PDAcroForm pDAcroForm = pDDocument.getDocumentCatalog().getAcroForm();
@@ -1015,12 +1016,17 @@ public class ClientService {
     }
 
 
-    public ClientDocsDTO updateClientDocs(String clientID, String docType, MultipartFile signature) {
+    public Boolean updateClientDocs(String clientID, String docType, MultipartFile signature) {
         String pdfContractFile = null;
-        ClientDocsDTO clientDocsDTO = new ClientDocsDTO();
+        String pdfAgreementFile = null;
         byte[] signatureByte = null;
         String restoreSignature = null;
         String signedContract = "signedContract.pdf";
+        String signedAgreement = "signedAgreement.pdf";
+        Client client = null;
+        ClientDocs clientDocs = null;
+
+
         try {
             signatureByte = signature.getBytes();
             restoreSignature = "restoreSignature.png";
@@ -1029,13 +1035,18 @@ public class ClientService {
             out.close();
         } catch (IOException e) {
             e.printStackTrace();
+            LOGGER.error("Error when reading 'MultipartFile' for the client: " + clientID);
+            return false;
         }
 
-  //=============================== resize signature ================================>
+  //==== resize signature ====== https://www.delftstack.com/ru/howto/java/java-resize-image/ =============>
         File fileToRead = new File(restoreSignature);
         BufferedImage bufferedImageInput = null;
-        int resizeWidth = 120;
-        int resizeHeight = 64;
+//        int resizeWidth = 120;
+//        int resizeHeight = 64;
+        int resizeWidth = 108;
+        int resizeHeight = 58;
+
         String imagePathToWrite = "resizeSignature.png";
         try {
             bufferedImageInput = ImageIO.read(fileToRead);
@@ -1051,6 +1062,8 @@ public class ClientService {
             ImageIO.write(bufferedImageOutput, formatName, new File(imagePathToWrite));
         } catch (IOException e) {
             e.printStackTrace();
+            LOGGER.error("Error when changing client signature size: " + clientID);
+            return false;
         }
   // ==================================================================================<
 
@@ -1060,6 +1073,7 @@ public class ClientService {
             } catch (IOException e) {
                 e.printStackTrace();
                 LOGGER.error("Error reading 'Contract' from 'ClientDocs' for client: " + clientID);
+                return false;
             }
             try {
                 if(pdfContractFile != null) {
@@ -1074,6 +1088,8 @@ public class ClientService {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                LOGGER.error("Error when inserting the client's signature into the contract: " + clientID);
+                return false;
             }
 
 //=======================================================================================================>
@@ -1086,21 +1102,22 @@ public class ClientService {
             } catch (IOException e) {
                 e.printStackTrace();
                 LOGGER.error("Error when reading the file: 'templateContractClient.pdf'");
+                return false;
             }
             PdfDocument pdfDocument = new PdfDocument(reader, writer);
             Document document = new Document(pdfDocument);
             document.close();
             byte[] pdfDocToByte = byteArrayOutputStream.toByteArray();
-            ClientDocs clientDocs = null;
             Optional<Client> clientOpt = clientRepository.findById(clientID);
             if(clientOpt.isPresent()) {
-                Client client = clientOpt.get();
+                client = clientOpt.get();
                 Long idClientDocs = client.getClientDocs().getId();
                 Optional<ClientDocs> clientDocsOptional = clientDocsRepository.findById(idClientDocs);
                 if (clientDocsOptional.isPresent()) {
                     clientDocs = clientDocsOptional.get();
                 }
                 clientDocs.setContract(pdfDocToByte);
+                clientDocs.setContractSignature(true);
                 try {
                     client.setClientDocs(clientDocs);
                     clientRepository.save(client);
@@ -1110,28 +1127,99 @@ public class ClientService {
                     FileUtils.deleteQuietly(new File(pdfContractFile));
                 } catch (Exception e) {
                     LOGGER.error("Error when saving an unsigned 'templateContractClient.pdf' to DB for the client: " + client.getId());
+                    return false;
                 }
             }
 //=======================================================================================================<
-
-
-
-
-
-
-
         }
 
         if(docType.equals("Agreement")){
+            try {
+                pdfAgreementFile = restoreAgreement_fromDB(clientID);
+            } catch (IOException e) {
+                e.printStackTrace();
+                LOGGER.error("Error reading 'Agreement' from 'ClientDocs' for client: " + clientID);
+                return false;
+            }
 
+            try {
+                if(pdfAgreementFile != null) {
+                    PDDocument doc = PDDocument.load(new File(pdfAgreementFile));
+                    PDPage page = doc.getPage(0);
+                    PDImageXObject pdImage = PDImageXObject.createFromFile(imagePathToWrite,doc);
+                    PDPageContentStream contents = new PDPageContentStream(doc, page, true, true);
+                    contents.drawImage(pdImage, 150, 265);
+                    contents.close();
+                    doc.save(signedAgreement);
+                    doc.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                LOGGER.error("Error when inserting the client's signature into the contract: " + clientID);
+                return false;
+            }
 
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            PdfWriter writer = new PdfWriter(byteArrayOutputStream);
+            PdfReader reader = null;
+            try {
+                reader = new PdfReader(signedAgreement);
+            } catch (IOException e) {
+                e.printStackTrace();
+                LOGGER.error("Error when reading the file: 'templateAgreementClient.pdf'");
+                return false;
+            }
+            PdfDocument pdfDocument = new PdfDocument(reader, writer);
+            Document document = new Document(pdfDocument);
+            document.close();
+            byte[] pdfDocToByte = byteArrayOutputStream.toByteArray();
+            Optional<Client> clientOpt = clientRepository.findById(clientID);
+            if(clientOpt.isPresent()) {
+                client = clientOpt.get();
+                Long idClientDocs = client.getClientDocs().getId();
+                Optional<ClientDocs> clientDocsOptional = clientDocsRepository.findById(idClientDocs);
+                if (clientDocsOptional.isPresent()) {
+                    clientDocs = clientDocsOptional.get();
+                }
+                clientDocs.setAgreement(pdfDocToByte);
+                clientDocs.setAgreementSignature(true);
+                try {
+                    client.setClientDocs(clientDocs);
+                    clientRepository.save(client);
+                    FileUtils.deleteQuietly(new File(restoreSignature));
+                    FileUtils.deleteQuietly(new File(imagePathToWrite));
+                    FileUtils.deleteQuietly(new File(signedAgreement));
+                    FileUtils.deleteQuietly(new File(pdfAgreementFile));
+                } catch (Exception e) {
+                    LOGGER.error("Error when saving an unsigned 'templateAgreementClient.pdf' to DB for the client: " + client.getId());
+                    return false;
+                }
+            }
+//=======================================================================================================<
         }
-
-
-        return clientDocsDTO;
+        return true;
     }
 
-
+    private String restoreAgreement_fromDB(String clientID) throws IOException {
+        Client client = null;
+        ClientDocs clientDocs = null;
+        String restoredAgreementFile = null;
+        Optional<Client> clientOpt = clientRepository.findById(clientID);
+        if(clientOpt.isPresent()) {
+            client = clientOpt.get();
+            Long idClientDocs = client.getClientDocs().getId();
+            Optional<ClientDocs> clientDocsOptional = clientDocsRepository.findById(idClientDocs);
+            if (clientDocsOptional.isPresent()) {
+                clientDocs = clientDocsOptional.get();
+                byte[] agreementByte = clientDocs.getAgreement();
+                restoredAgreementFile = "templateClientAgreement.pdf";
+                OutputStream out = new FileOutputStream(restoredAgreementFile);
+                out.write(agreementByte);
+                out.close();
+            }
+          }
+              return restoredAgreementFile;
+    }
 
 
     public String restoreContract_fromDB(String clientID) throws IOException {
@@ -1156,8 +1244,27 @@ public class ClientService {
     }
 
 
-
-
+    public Boolean setClientFoto(String id, MultipartFile foto) {
+        Optional<Client> clientOptional = clientRepository.findById(id);
+        if (clientOptional.isPresent()){
+            try {
+                Client client = clientOptional.get();
+                ClientDocs clientDocsCurrentClient = client.getClientDocs();
+                clientDocsCurrentClient.setClientFoto(foto.getBytes());
+                client.setClientDocs(clientDocsCurrentClient);
+                clientRepository.save(client);
+            }
+            catch (Exception e){
+                LOGGER.error("Error when saving the foto for the client: " + id);
+                return false;
+            }
+        }
+        else {
+            LOGGER.error("Client with id= '" + id + "' does not exist");
+            return false;
+        }
+        return true;
+    }
 
 
 }
