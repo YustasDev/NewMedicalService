@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 public class AssignmentDTO {
 
     private String assignmentId;
+    private String clientName;
 
     private String checkupAddress;
     private String checkupMobile;

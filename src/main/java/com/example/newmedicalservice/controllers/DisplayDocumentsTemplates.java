@@ -71,12 +71,9 @@ public class DisplayDocumentsTemplates {
             if(document.equals("Contract")) {
                 pdfForSignature = clientService.getCustomizedContract(id);
             }
-            else if (document.equals("Agreement")){
+            if (document.equals("Agreement")){
                 pdfForSignature = clientService.getCustomizedAgreement(id);
             }
-//            else if (clientQuestionnaire != null){
-//                clientService.restoreQuestionnaire_fromDB(clientID);
-//            }
         } catch (Exception e) {
             e.printStackTrace();
             log.error("The error has occurred ==> " + e);

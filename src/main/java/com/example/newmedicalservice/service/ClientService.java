@@ -738,6 +738,11 @@ public class ClientService {
             assignmentDTO.setAssignmentDescription(assignment.getAssignmentDescription());
             assignmentDTO.setIdUser(String.valueOf(assignment.getIdUser()));
             assignmentDTO.setClientId(String.valueOf(assignment.getClient().getId()));
+
+            Client client = assignment.getClient();
+            String clientName = client.getFirstName() + " " + client.getSurName();
+            assignmentDTO.setClientName(clientName);
+
             assignmentDTO.setDoctorId(String.valueOf(assignment.getDoctor().getId()));
             assignmentDTO.setAssignmentType(assignment.getAssignmentType().name());
             assignmentDTO.setIsDone(assignment.getIsDone());
@@ -858,6 +863,8 @@ public class ClientService {
 
 
     public List<AssignmentDTO> getUnfulfilledAssignments() {
+
+
         LocalDateTime dateTimeToday = LocalDateTime.now();
         List<Assignment> unfulfilledAssignments = new ArrayList<>();
         List<AssignmentDTO> unfulfilledAssignmentsDTO = new ArrayList<>();

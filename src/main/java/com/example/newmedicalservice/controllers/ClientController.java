@@ -9,6 +9,9 @@ import com.example.newmedicalservice.repository.DoctorRepository;
 import com.example.newmedicalservice.repository.FamilyRepository;
 import com.example.newmedicalservice.service.ClientService;
 import com.example.newmedicalservice.service.DefaultEmailService;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,14 +23,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.RequestContext;
 
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -85,8 +85,6 @@ public class ClientController {
 //    }
 
 
-
-
 //    @CrossOrigin
 //    @PostMapping("/getDocument")
 //    ResponseEntity<?> returnDocument(@RequestParam(name="clientID", required=true) String id,
@@ -112,7 +110,6 @@ public class ClientController {
 //        }
 
 
-
 //    @CrossOrigin
 //    @PostMapping("/getDocumentsStatus")
 //    ResponseEntity<?> returnDocument(@RequestParam(name="clientID") String id) {
@@ -128,28 +125,26 @@ public class ClientController {
 //    }
 
 
-
     @CrossOrigin
     @GetMapping("/getFamily")
-    ResponseEntity<?> getFamily(){
+    ResponseEntity<?> getFamily() {
         List<FamilyDTO> familyDTOList = clientService.getFamilyList();
         return ResponseEntity.status(HttpStatus.OK).body(familyDTOList);
     }
 
     @CrossOrigin
     @PatchMapping("/modifyFamily")
-    ResponseEntity<?> modifyFamilyData(@RequestParam(name="familyID", required=true) String familyID,
-                                       @RequestParam(name="familyName", required=false) String familyName,
-                                       @RequestParam(name="familyMobile", required=false) String familyMobile,
-                                       @RequestParam(name="familyDescription", required=false) String familyDescription,
-                                       @RequestParam(name="familyHead", required=false) String familyHead){
+    ResponseEntity<?> modifyFamilyData(@RequestParam(name = "familyID", required = true) String familyID,
+                                       @RequestParam(name = "familyName", required = false) String familyName,
+                                       @RequestParam(name = "familyMobile", required = false) String familyMobile,
+                                       @RequestParam(name = "familyDescription", required = false) String familyDescription,
+                                       @RequestParam(name = "familyHead", required = false) String familyHead) {
 
-    Family familyAfterRedact = clientService.redactFamilyData(familyID, familyName, familyMobile, familyDescription, familyHead);
-        if(familyAfterRedact != null) {
+        Family familyAfterRedact = clientService.redactFamilyData(familyID, familyName, familyMobile, familyDescription, familyHead);
+        if (familyAfterRedact != null) {
             FamilyDTO familyDTO = clientService.mapFamily_toFamilyDTO(familyAfterRedact);
             return ResponseEntity.status(HttpStatus.CREATED).body(familyDTO);
-        }
-        else {
+        } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such family with ID = " + familyID);
         }
     }
@@ -170,7 +165,7 @@ public class ClientController {
         newClient.setKxNumber(clientDTO.getKxNumber());
 
         String phone = clientDTO.getTelephone();
-        if(phone != null) {
+        if (phone != null) {
             phone = phone.replaceAll("[\\D]", "");
             if (phone.length() == 11) {
                 newClient.setTelephone(clientDTO.getTelephone());
@@ -190,13 +185,12 @@ public class ClientController {
         newClient.setAddress(clientDTO.getAddress());
 
         Doctor doctor = null;
-        if(clientDTO.getDoctorID() != null) {
+        if (clientDTO.getDoctorID() != null) {
             Optional<Doctor> doctorOptional = doctorRepository.findById(clientDTO.getDoctorID());
             if (doctorOptional.isPresent()) {
                 doctor = doctorOptional.get();
                 newClient.setDoctor(doctor);
-            }
-            else {
+            } else {
                 LOGGER.error(marker, "Doctor with ID = '" + clientDTO.getDoctorID() + "' does not exist in the database");
             }
         }
@@ -214,10 +208,9 @@ public class ClientController {
         ClientDocs clientDocs = new ClientDocs();
         clientDocs.setPassportNumber(clientDTO.getPassportNumber());
         newClient.setClientDocs(clientDocs);
-        if(clientDTO.getFamilyID() != null){
+        if (clientDTO.getFamilyID() != null) {
             family = familyRepository.getReferenceById(clientDTO.getFamilyID());
-        }
-        else {
+        } else {
             family = new Family();
             family.setFamilyMobile(newClient.getTelephone());
         }
@@ -228,27 +221,25 @@ public class ClientController {
             clientForAnswer = clientService.mapClient_toClientDTOclass(newClient);
 
             /* archive the doctor's assignment data */
-            if(clientDTO.getDoctorID() != null && doctor != null){
+            if (clientDTO.getDoctorID() != null && doctor != null) {
                 DoctorArchive doctorArchive = new DoctorArchive();
                 doctorArchive.setIdDoctor(doctor.getId());
                 doctorArchive.setIdClient(newClient.getId());
                 doctorArchive.setSetupDate(LocalDateTime.now());
                 doctorArchiveRepository.save(doctorArchive);
             }
-        }
-        catch (ConstraintViolationException | DataIntegrityViolationException cve ){
+        } catch (ConstraintViolationException | DataIntegrityViolationException cve) {
             LOGGER.error(marker, "An error occurred when creating a new customer ==> " + cve);
             LOGGER.error(marker, "Incoming data to create a new client ==> " + clientDTO);
             String errorAnswer = "";
             String errorMessage = cve.getMessage();
-            if(errorMessage.contains("messageTemplate")) {
+            if (errorMessage.contains("messageTemplate")) {
                 errorAnswer = errorMessage.substring(errorMessage.lastIndexOf("messageTemplate"))
                         .replaceAll("[\\p{Punct}\\s&&[^\\h]&&[^-]]", "").replaceAll("messageTemplate", "");
             }
             errorAnswer = "The limitations of the data schema are violated";
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errorAnswer);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error(marker, e.getMessage());
             LOGGER.error(marker, "Incoming data to create a new client ==> " + clientDTO);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("internal error");
@@ -271,7 +262,7 @@ public class ClientController {
 
     @CrossOrigin
     @GetMapping("/getAllClients")
-    ResponseEntity<?> selectClientBy(){
+    ResponseEntity<?> selectClientBy() {
         List<ClientDTO> allClientsDTO = clientService.getAllClients();
         return ResponseEntity.status(HttpStatus.OK).body(allClientsDTO);
     }
@@ -279,36 +270,35 @@ public class ClientController {
 
     @CrossOrigin
     @PostMapping("/selectClient")
-    ResponseEntity<?> selectClientBy(@RequestParam(name="clientID", required=false) String id,
-                                     @RequestParam(name="clientPassportNumber", required=false) String passportNumber,
-                                     @RequestParam(name="clientTelephon", required=false) String telephon,
-                                     @RequestParam(name="clientEmail", required=false) String email,
-                                     @RequestParam(name="clientSurName", required=false) String surName) {
+    ResponseEntity<?> selectClientBy(@RequestParam(name = "clientID", required = false) String id,
+                                     @RequestParam(name = "clientPassportNumber", required = false) String passportNumber,
+                                     @RequestParam(name = "clientTelephon", required = false) String telephon,
+                                     @RequestParam(name = "clientEmail", required = false) String email,
+                                     @RequestParam(name = "clientSurName", required = false) String surName) {
 
         List<ClientDTO> foundClients = clientService.searchClients(id, passportNumber, telephon, email, surName);
         return ResponseEntity.status(HttpStatus.OK).body(foundClients);
     }
 
 
-
     @CrossOrigin
     @PatchMapping("/modifyClientData")
-    ResponseEntity<?> modifyClientData(@RequestParam(name="clientPassportNumber", required=true) String clientPassportNumber,
-                                       @RequestParam(name="clientKXNumber", required=false) String kxNumber,
-                                       @RequestParam(name="clientFirstName", required=false) String clientFirstName,
-                                       @RequestParam(name="clientLastName", required=false) String clientLastName,
-                                       @RequestParam(name="clientSurname", required=false) String clientSurname,
-                                       @RequestParam(name="clientEmail", required=false) String clientEmail,
-                                       @RequestParam(name="clientTelefon", required=false) String clientTelefon,
-                                       @RequestParam(name="clientAddress", required=false) String clientAddress,
-                                       @RequestParam(name="clientServiceDescription", required=false) String clientServiceDescription,
-                                       @RequestParam(name="clientFamilyID", required=false) String clientFamilyID,
-                                       @RequestParam(name="clientStartPaymentDate", required=false) String clientStartPaymentDateStr,
-                                       @RequestParam(name="clientStartServiceDate", required=false) String clientStartServiceDateStr,
-                                       @RequestParam(name="clientBlocked", required=false) Boolean clientBlocked,
-                                       @RequestParam(name="clientBlockedReasonDescription", required=false) String clientBlockedReasonDescription,
-                                       @RequestParam(name="clientBlockDate", required=false) String clientBlockDateStr,
-                                       @RequestParam(name="clientID_Doctor", required=false) String clientID_Doctor){
+    ResponseEntity<?> modifyClientData(@RequestParam(name = "clientPassportNumber", required = true) String clientPassportNumber,
+                                       @RequestParam(name = "clientKXNumber", required = false) String kxNumber,
+                                       @RequestParam(name = "clientFirstName", required = false) String clientFirstName,
+                                       @RequestParam(name = "clientLastName", required = false) String clientLastName,
+                                       @RequestParam(name = "clientSurname", required = false) String clientSurname,
+                                       @RequestParam(name = "clientEmail", required = false) String clientEmail,
+                                       @RequestParam(name = "clientTelefon", required = false) String clientTelefon,
+                                       @RequestParam(name = "clientAddress", required = false) String clientAddress,
+                                       @RequestParam(name = "clientServiceDescription", required = false) String clientServiceDescription,
+                                       @RequestParam(name = "clientFamilyID", required = false) String clientFamilyID,
+                                       @RequestParam(name = "clientStartPaymentDate", required = false) String clientStartPaymentDateStr,
+                                       @RequestParam(name = "clientStartServiceDate", required = false) String clientStartServiceDateStr,
+                                       @RequestParam(name = "clientBlocked", required = false) Boolean clientBlocked,
+                                       @RequestParam(name = "clientBlockedReasonDescription", required = false) String clientBlockedReasonDescription,
+                                       @RequestParam(name = "clientBlockDate", required = false) String clientBlockDateStr,
+                                       @RequestParam(name = "clientID_Doctor", required = false) String clientID_Doctor) {
         //    @RequestParam(name="clientIDPaymentPlan", required=false) String clientIDPaymentPlan,
 
 
@@ -317,13 +307,13 @@ public class ClientController {
         LocalDateTime clientStartServiceDate = null;
         LocalDateTime clientBlockDate = null;
 
-        if(!clientStartPaymentDateStr.isEmpty()){
+        if (!clientStartPaymentDateStr.isEmpty()) {
             clientStartPaymentDate = LocalDateTime.parse(clientStartPaymentDateStr, formatter);
         }
-        if(!clientStartServiceDateStr.isEmpty()){
+        if (!clientStartServiceDateStr.isEmpty()) {
             clientStartServiceDate = LocalDateTime.parse(clientStartServiceDateStr, formatter);
         }
-        if(!clientBlockDateStr.isEmpty()){
+        if (!clientBlockDateStr.isEmpty()) {
             clientBlockDate = LocalDateTime.parse(clientBlockDateStr, formatter);
         }
 
@@ -331,11 +321,10 @@ public class ClientController {
                 clientEmail, clientTelefon, clientAddress, clientServiceDescription, clientFamilyID, clientStartPaymentDate,
                 clientStartServiceDate, clientBlocked, clientBlockedReasonDescription, clientBlockDate, clientID_Doctor);
 
-        if(clientAfterRedact != null) {
+        if (clientAfterRedact != null) {
             ClientDTO clientForAnswer = clientService.mapClient_toClientDTOclass(clientAfterRedact);
             return ResponseEntity.status(HttpStatus.CREATED).body(clientForAnswer);
-        }
-        else {
+        } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such client with passport number = " + clientPassportNumber);
         }
     }
@@ -366,25 +355,24 @@ public class ClientController {
 
     @CrossOrigin
     @PatchMapping("/modifyDoctor")
-    ResponseEntity<?> modifyDoctor(@RequestParam(name="doctorID", required=true) String doctorID,
-                                   @RequestParam(name="doctorFirstName", required = false) String doctorFirstName,
-                                   @RequestParam(name="doctorLastName", required = false) String doctorLastName,
-                                   @RequestParam(name="doctorSureName", required = false) String doctorSureName,
-                                   @RequestParam(name="doctorTelefon", required = false) String doctorTelefon,
-                                   @RequestParam(name="doctorEmail", required = false) String doctorEmail,
-                                   @RequestParam(name="doctorAddres", required = false) String doctorAddres,
-                                   @RequestParam(name="description", required = false) String description,
-                                   @RequestParam(name="doctorType", required = false) String doctorType){
+    ResponseEntity<?> modifyDoctor(@RequestParam(name = "doctorID", required = true) String doctorID,
+                                   @RequestParam(name = "doctorFirstName", required = false) String doctorFirstName,
+                                   @RequestParam(name = "doctorLastName", required = false) String doctorLastName,
+                                   @RequestParam(name = "doctorSureName", required = false) String doctorSureName,
+                                   @RequestParam(name = "doctorTelefon", required = false) String doctorTelefon,
+                                   @RequestParam(name = "doctorEmail", required = false) String doctorEmail,
+                                   @RequestParam(name = "doctorAddres", required = false) String doctorAddres,
+                                   @RequestParam(name = "description", required = false) String description,
+                                   @RequestParam(name = "doctorType", required = false) String doctorType) {
 
-        Doctor modifiedDoctor = clientService.redactDoctor(doctorID, doctorFirstName, doctorLastName,doctorSureName,
+        Doctor modifiedDoctor = clientService.redactDoctor(doctorID, doctorFirstName, doctorLastName, doctorSureName,
                 doctorTelefon, doctorEmail, doctorAddres, description,
                 doctorType);
 
-        if(modifiedDoctor != null){
+        if (modifiedDoctor != null) {
             DoctorDTO doctorDTO_forAnswer = clientService.mapDoctor_toDoctorDTO(modifiedDoctor);
             return ResponseEntity.status(HttpStatus.CREATED).body(doctorDTO_forAnswer);
-        }
-        else {
+        } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such doctor with ID = " + doctorID);
         }
     }
@@ -396,7 +384,7 @@ public class ClientController {
         Marker marker = clientService.getLogMarker();
         String doctorID = assignmentDTO.getDoctorId();
         String clientID = assignmentDTO.getClientId();
-        if(doctorID == null || clientID == null){
+        if (doctorID == null || clientID == null) {
             LOGGER.error(marker, "doctorID= " + doctorID + " / clientID= " + clientID);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It is not possible to create a new Assignment because clientID or doctorID == null");
         }
@@ -404,10 +392,9 @@ public class ClientController {
 
         Assignment newAssignment = clientService.createNewAssignment(assignmentDTO);
         AssignmentDTO assignmentDTO_forAnswer = clientService.mapAssignment_toAssignmentDTO(newAssignment);
-        if(assignmentDTO_forAnswer != null){
+        if (assignmentDTO_forAnswer != null) {
             return ResponseEntity.status(HttpStatus.CREATED).body(assignmentDTO_forAnswer);
-        }
-        else {
+        } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Creation error new Assignment");
         }
     }
@@ -428,7 +415,7 @@ public class ClientController {
 
     @CrossOrigin
     @GetMapping("/getUnfulfilledAssignments")
-    ResponseEntity<?> getUnfulfilledAssignments(){
+    ResponseEntity<?> getUnfulfilledAssignments() {
         List<AssignmentDTO> assignmentDTOList = clientService.getUnfulfilledAssignments();
         return ResponseEntity.status(HttpStatus.OK).body(assignmentDTOList);
     }
@@ -436,27 +423,26 @@ public class ClientController {
 
     @CrossOrigin
     @PatchMapping("/modifyAssignment")
-    ResponseEntity<?> modifyAssignment(@RequestParam(name="assignmentID", required=true) String assignmentID,
-                                   @RequestParam(name="assignmentCheckupAddress", required = false) String assignmentCheckupAddress,
-                                   @RequestParam(name="assignmentCheckupMobile", required = false) String assignmentCheckupMobile,
-                                   @RequestParam(name="assignmentCheckupEmail", required = false) String assignmentCheckupEmail,
-                                   @RequestParam(name="assignmentCheckupDescription", required = false) String assignmentCheckupDescription,
-                                   @RequestParam(name="assignmentDateTimeWhenToDo", required = false) String assignmentDateTimeWhenToDo,
-                                   @RequestParam(name="assignmentDescription", required = false) String assignmentDescription,
-                                   @RequestParam(name="assignmentClientId", required = false) String assignmentClientId,
-                                   @RequestParam(name="assignmentDoctorId", required = false) String assignmentDoctorId,
-                                   @RequestParam(name="assignmentType", required = false) String assignmentType,
-                                   @RequestParam(name="assignmentIsDone", required = false) String assignmentIsDone){
+    ResponseEntity<?> modifyAssignment(@RequestParam(name = "assignmentID", required = true) String assignmentID,
+                                       @RequestParam(name = "assignmentCheckupAddress", required = false) String assignmentCheckupAddress,
+                                       @RequestParam(name = "assignmentCheckupMobile", required = false) String assignmentCheckupMobile,
+                                       @RequestParam(name = "assignmentCheckupEmail", required = false) String assignmentCheckupEmail,
+                                       @RequestParam(name = "assignmentCheckupDescription", required = false) String assignmentCheckupDescription,
+                                       @RequestParam(name = "assignmentDateTimeWhenToDo", required = false) String assignmentDateTimeWhenToDo,
+                                       @RequestParam(name = "assignmentDescription", required = false) String assignmentDescription,
+                                       @RequestParam(name = "assignmentClientId", required = false) String assignmentClientId,
+                                       @RequestParam(name = "assignmentDoctorId", required = false) String assignmentDoctorId,
+                                       @RequestParam(name = "assignmentType", required = false) String assignmentType,
+                                       @RequestParam(name = "assignmentIsDone", required = false) String assignmentIsDone) {
 
         Assignment modifiedAssignment = clientService.redactAssignment(assignmentID, assignmentCheckupAddress, assignmentCheckupMobile,
-                                        assignmentCheckupEmail, assignmentCheckupDescription, assignmentDateTimeWhenToDo,
-                                        assignmentDescription, assignmentClientId, assignmentDoctorId, assignmentType, assignmentIsDone);
+                assignmentCheckupEmail, assignmentCheckupDescription, assignmentDateTimeWhenToDo,
+                assignmentDescription, assignmentClientId, assignmentDoctorId, assignmentType, assignmentIsDone);
 
-        if(modifiedAssignment != null){
+        if (modifiedAssignment != null) {
             AssignmentDTO assignmentDTO_forAnswer = clientService.mapAssignment_toAssignmentDTO(modifiedAssignment);
             return ResponseEntity.status(HttpStatus.CREATED).body(assignmentDTO_forAnswer);
-        }
-        else {
+        } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no such assignment with ID = " + assignmentID);
         }
     }
@@ -464,13 +450,34 @@ public class ClientController {
 
     @CrossOrigin
     @PostMapping("/getAssignmentsForDay")
-    ResponseEntity<?> getAssignmentsForDay(@RequestParam(name="assignmentDateTimeWhenToDo", required=true) String assignmentDateTimeWhenToDo){
+    ResponseEntity<?> getAssignmentsForDay(@RequestParam(name = "assignmentDateTimeWhenToDo", required = true) String assignmentDateTimeWhenToDo) {
         List<AssignmentDTO> assignmentForDay = clientService.getAssignmentsForDay(assignmentDateTimeWhenToDo);
         return ResponseEntity.status(HttpStatus.OK).body(assignmentForDay);
     }
 
-//    @Autowired
-//    HttpServletRequest httpServletRequest;
+    @CrossOrigin
+    @GetMapping("/getQuestionnaire/{clientID}")
+    ResponseEntity<?> getQuestionnaire(@PathVariable String clientID) {
+        Optional<Client> clientOptional = clientRepository.findById(clientID);
+        String questionare = null;
+        if(clientOptional.isPresent()){
+            Client client = clientOptional.get();
+            questionare = client.getClientDocs().getQuestionnaire();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(questionare);
+    }
+
+    @CrossOrigin
+    @GetMapping("/getFoto/{clientID}")
+    ResponseEntity<?> getFoto(@PathVariable String clientID) {
+        Optional<Client> clientOptional = clientRepository.findById(clientID);
+        byte[] foto = null;
+        if(clientOptional.isPresent()){
+            Client client = clientOptional.get();
+            foto = client.getClientDocs().getClientFoto();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(foto);
+    }
 
 
 
