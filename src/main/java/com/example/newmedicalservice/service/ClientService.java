@@ -1155,7 +1155,7 @@ public class ClientService {
                     PDPage page = doc.getPage(0);
                     PDImageXObject pdImage = PDImageXObject.createFromFile(imagePathToWrite,doc);
                     PDPageContentStream contents = new PDPageContentStream(doc, page, true, true);
-                    contents.drawImage(pdImage, 150, 265);
+                    contents.drawImage(pdImage, 150, 275);
                     contents.close();
                     doc.save(signedAgreement);
                     doc.close();
@@ -1272,6 +1272,34 @@ public class ClientService {
         }
         return true;
     }
+
+
+    public byte[] getContractForDisplay(String id) {
+        Client client = null;
+        ClientDocs clientDocs = null;
+        byte[] contractInPDF = null;
+        Optional<Client> clientOpt = clientRepository.findById(id);
+        if(clientOpt.isPresent()) {
+            client = clientOpt.get();
+            contractInPDF = client.getClientDocs().getContract();
+        }
+        return contractInPDF;
+    }
+
+    public byte[] getAgreementForDisplay(String id) {
+        Client client = null;
+        ClientDocs clientDocs = null;
+        byte[] agreementInPDF = null;
+        Optional<Client> clientOpt = clientRepository.findById(id);
+        if(clientOpt.isPresent()) {
+            client = clientOpt.get();
+            agreementInPDF = client.getClientDocs().getAgreement();
+        }
+        return agreementInPDF;
+    }
+
+
+
 
 
 }

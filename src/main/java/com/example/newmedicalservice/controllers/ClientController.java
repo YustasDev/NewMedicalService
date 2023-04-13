@@ -27,6 +27,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.mail.MessagingException;
 import javax.validation.ConstraintViolationException;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -454,6 +457,47 @@ public class ClientController {
         List<AssignmentDTO> assignmentForDay = clientService.getAssignmentsForDay(assignmentDateTimeWhenToDo);
         return ResponseEntity.status(HttpStatus.OK).body(assignmentForDay);
     }
+
+    @CrossOrigin
+    @PostMapping("/getDocumentForDisplay")
+    ResponseEntity<?> returnDocument(@RequestParam(name="clientID", required=true) String id,
+                                     @RequestParam(name="documentType", required=true) String document) {
+
+        byte[] pdfForDisplay = null;
+        try {
+            if(document.equals("Contract")) {
+                pdfForDisplay = clientService.getContractForDisplay(id);
+            }
+            if (document.equals("Agreement")){
+                pdfForDisplay = clientService.getAgreementForDisplay(id);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("The error has occurred ==> " + e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("PDF document template not received");
+        }
+
+
+//        String restoredContractFile = "displayClientContract.pdf";
+//        OutputStream out = null;
+//            try {
+//                out = new FileOutputStream(restoredContractFile);
+//                try {
+//                    out.write(pdfForDisplay);
+//                    out.close();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            } catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            }
+//
+//            return null;
+//        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(pdfForDisplay);
+    }
+
 
     @CrossOrigin
     @GetMapping("/getQuestionnaire/{clientID}")
