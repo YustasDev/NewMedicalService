@@ -19,6 +19,7 @@ import org.apache.logging.log4j.Marker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -514,13 +515,14 @@ public class ClientController {
     @CrossOrigin
     @GetMapping("/getFoto/{clientID}")
     ResponseEntity<?> getFoto(@PathVariable String clientID) {
+        MediaType contentType = MediaType.IMAGE_PNG;
         Optional<Client> clientOptional = clientRepository.findById(clientID);
         byte[] foto = null;
         if(clientOptional.isPresent()){
             Client client = clientOptional.get();
             foto = client.getClientDocs().getClientFoto();
         }
-        return ResponseEntity.status(HttpStatus.OK).body(foto);
+        return ResponseEntity.status(HttpStatus.OK). contentType(contentType).body(foto);
     }
 
 

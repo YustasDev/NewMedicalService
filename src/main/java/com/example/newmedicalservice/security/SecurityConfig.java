@@ -42,7 +42,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
                 .antMatchers("/admin/**").hasRole("admin")
                 .antMatchers("/customers/**").hasAnyRole("admin", "secretary")
                 .antMatchers("/**").permitAll()
-                .and().formLogin();
+       //         .and().formLogin();
+                .and().formLogin()
+                .and()
+                .logout()
+                .logoutUrl("/perform_logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID");
+
+
+
+
     }
 
     @Override
