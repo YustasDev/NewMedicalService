@@ -175,7 +175,9 @@ public class ClientController {
                 newClient.setTelephone(clientDTO.getTelephone());
             } else {
                 System.err.println("The phone number is not valid");
-                LOGGER.error(marker, "The phone number given is invalid: " + phone);
+                LOGGER.error(marker, "The phone number given is invalid: " + clientDTO.getTelephone());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The phone number given is invalid: " + clientDTO.getTelephone());
+
             }
         }
         String clientEmail = clientDTO.getEmail();
@@ -184,6 +186,7 @@ public class ClientController {
         } else {
             System.err.println("The client e-mail is not valid");
             LOGGER.error(marker, "The client e-mail given is invalid: " + clientEmail);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The client e-mail given is invalid: " + clientEmail);
         }
 
         newClient.setAddress(clientDTO.getAddress());
@@ -477,25 +480,6 @@ public class ClientController {
             log.error("The error has occurred ==> " + e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("PDF document template not received");
         }
-
-
-//        String restoredContractFile = "displayClientContract.pdf";
-//        OutputStream out = null;
-//            try {
-//                out = new FileOutputStream(restoredContractFile);
-//                try {
-//                    out.write(pdfForDisplay);
-//                    out.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            }
-//
-//            return null;
-//        }
-
         return ResponseEntity.status(HttpStatus.OK).body(pdfForDisplay);
     }
 
